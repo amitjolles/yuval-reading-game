@@ -312,7 +312,55 @@
       text-align: center;
       min-height: 1.8em;
     }
+    /* ── PUZZLE MINI-GAME ── */
+    .puzzle-intro { font-size: clamp(0.9rem, 3vw, 1.1rem); color: #6c5ce7; font-weight: 700; }
+    .puzzle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(2, 80px);
+      gap: 5px;
+      margin: 14px auto;
+      width: fit-content;
+    }
+    .puzzle-piece {
+      width: 100px; height: 80px;
+      overflow: hidden;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 3px solid rgba(255,255,255,0.5);
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      position: relative;
+      background: #ddd;
+    }
+    .puzzle-piece:hover { transform: scale(1.04); }
+    .puzzle-piece.p-selected {
+      border-color: #e84393;
+      box-shadow: 0 0 18px rgba(232,67,147,0.75);
+      transform: scale(1.06);
+      z-index: 10;
+    }
+    .puzzle-piece.p-done {
+      border-color: #00b894;
+      animation: piecePop 0.4s ease;
+    }
+    @keyframes piecePop {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.09); }
+    }
+    .piece-inner {
+      width: 300px; height: 160px;
+      position: absolute; top: 0; left: 0;
+      pointer-events: none;
+    }
+
     /* ── PRIZE SCREEN ── */
+    #screenGameDone.active .card {
+      animation: celebEnter 0.7s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes celebEnter {
+      from { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+      to   { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
     .prize-crown {
       font-size: clamp(4rem, 16vw, 6rem);
       animation: crownFloat 2s ease-in-out infinite;
@@ -361,7 +409,6 @@
     <!-- Sentence mode (level 3) -->
     <div id="sentenceMode" style="display:none">
       <div class="sentence-text" id="sentenceText"></div>
-      <button class="btn btn-hear" onclick="hearSentence()">&#x1F50A; &#x05E9;&#x05DE;&#x05E2;&#x05D9; &#x05D0;&#x05EA; &#x05D4;&#x05DE;&#x05E9;&#x05E4;&#x05D8;</button>
       <p class="subtitle">&#x05D1;&#x05D7;&#x05E8;&#x05D9; &#x05D0;&#x05EA; &#x05D4;&#x05EA;&#x05DE;&#x05D5;&#x05E0;&#x05D4; &#x05D4;&#x05DE;&#x05EA;&#x05D0;&#x05D9;&#x05DE;&#x05D4;:</p>
       <div class="options-grid" id="emojiOptions"></div>
       <div class="feedback" id="sentenceFeedback"></div>
@@ -387,6 +434,17 @@
     <p class="map-msg" id="mapMsg"></p>
     <button class="btn btn-next" id="mapContinueBtn" style="display:none" onclick="continueJourney()">קְדִימָה! ➡️</button>
     <button class="btn btn-start" id="mapPrizeBtn" style="display:none" onclick="openPrize()">פִּתְחִי אֶת הַפְּרָס! 🎁</button>
+  </div>
+</div>
+
+<!-- ════════════ PUZZLE PRIZE ════════════ -->
+<div class="screen" id="screenPuzzle">
+  <div class="card">
+    <p class="map-title">🎁 הַפְּרָס שֶׁלָּךְ!</p>
+    <p class="puzzle-intro">סַדְּרִי אֶת הַחֲלָקִים כְּדֵי לְגַלּוֹת אֶת הַתְּמוּנָה! 🌈</p>
+    <div class="puzzle-grid" id="puzzleGrid"></div>
+    <p class="map-msg" id="puzzleMsg"></p>
+    <button class="btn btn-start" id="puzzleDoneBtn" style="display:none" onclick="showFinalCelebration()">אַלּוּפָה! 🎉</button>
   </div>
 </div>
 
@@ -424,6 +482,16 @@ const LEVELS = [
       { display: "בַּיִת",  speech: "בַּיִת",  emoji: "🏠" },
       { display: "אִמָּא",  speech: "אִמָּא",  emoji: "👩" },
       { display: "שֶׁמֶשׁ", speech: "שֶׁמֶשׁ", emoji: "☀️" },
+      { display: "יָד",    speech: "יָד",    emoji: "✋" },
+      { display: "אַף",    speech: "אַף",    emoji: "👃" },
+      { display: "עַיִן",  speech: "עַיִן",  emoji: "👁️" },
+      { display: "פֶּה",   speech: "פֶּה",   emoji: "👄" },
+      { display: "סוּס",   speech: "סוּס",   emoji: "🐴" },
+      { display: "כּוֹבַע", speech: "כּוֹבַע", emoji: "🎩" },
+      { display: "מַיִם",  speech: "מַיִם",  emoji: "💧" },
+      { display: "לַיְלָה", speech: "לַיְלָה", emoji: "🌙" },
+      { display: "אוֹר",   speech: "אוֹר",   emoji: "💡" },
+      { display: "יֶלֶד",  speech: "יֶלֶד",  emoji: "👦" },
     ]
   },
   {
@@ -440,6 +508,16 @@ const LEVELS = [
       { display: "שֶׁלֶג",    speech: "שֶׁלֶג",    emoji: "❄️" },
       { display: "רַכֶּבֶת",  speech: "רַכֶּבֶת",  emoji: "🚂" },
       { display: "נַעַל",    speech: "נַעַל",    emoji: "👟" },
+      { display: "יַלְדָּה",  speech: "יַלְדָּה",  emoji: "👧" },
+      { display: "מִטָּה",   speech: "מִטָּה",   emoji: "🛏️" },
+      { display: "דֶּלֶת",   speech: "דֶּלֶת",   emoji: "🚪" },
+      { display: "סֵפֶר",   speech: "סֵפֶר",   emoji: "📚" },
+      { display: "עֵפָּרוֹן", speech: "עֵפָּרוֹן", emoji: "✏️" },
+      { display: "חַלּוֹן",  speech: "חַלּוֹן",  emoji: "🪟" },
+      { display: "אוֹטוֹ",   speech: "אוֹטוֹ",   emoji: "🚗" },
+      { display: "גָּמָל",   speech: "גָּמָל",   emoji: "🐪" },
+      { display: "תּוּכִּי",  speech: "תּוּכִּי",  emoji: "🦜" },
+      { display: "כּוֹכָב",  speech: "כּוֹכָב",  emoji: "⭐" },
     ]
   },
   {
@@ -500,11 +578,61 @@ const LEVELS = [
         display: "הַכַּדּוּר עָגֹל",
         speech:  "הַכַּדּוּר עָגֹל",
         correctEmoji: "⚽",
-        options: [
-          { emoji: "🏠",  id: 0 },
-          { emoji: "⚽",  id: 1 },
-          { emoji: "🎂",  id: 2 },
-        ]
+        options: [ { emoji: "🏠", id: 0 }, { emoji: "⚽", id: 1 }, { emoji: "🎂", id: 2 } ]
+      },
+      {
+        display: "הַסּוּס גָּדוֹל",
+        speech:  "הַסּוּס גָּדוֹל",
+        correctEmoji: "🐴",
+        options: [ { emoji: "🐟", id: 0 }, { emoji: "🌸", id: 1 }, { emoji: "🐴", id: 2 } ]
+      },
+      {
+        display: "הַמַּיִם קָרִים",
+        speech:  "הַמַּיִם קָרִים",
+        correctEmoji: "💧",
+        options: [ { emoji: "💧", id: 0 }, { emoji: "🔥", id: 1 }, { emoji: "⭐", id: 2 } ]
+      },
+      {
+        display: "הָעֵץ גָּבֹהַּ",
+        speech:  "הָעֵץ גָּבֹהַּ",
+        correctEmoji: "🌳",
+        options: [ { emoji: "🌸", id: 0 }, { emoji: "🌳", id: 1 }, { emoji: "🐦", id: 2 } ]
+      },
+      {
+        display: "הַיֶּלֶד יָשֵׁן",
+        speech:  "הַיֶּלֶד יָשֵׁן",
+        correctEmoji: "👦",
+        options: [ { emoji: "👧", id: 0 }, { emoji: "👦", id: 1 }, { emoji: "🐕", id: 2 } ]
+      },
+      {
+        display: "הַכֶּלֶב רָץ",
+        speech:  "הַכֶּלֶב רָץ",
+        correctEmoji: "🐕",
+        options: [ { emoji: "😺", id: 0 }, { emoji: "🦋", id: 1 }, { emoji: "🐕", id: 2 } ]
+      },
+      {
+        display: "הַחָתוּל שׁוֹתֶה",
+        speech:  "הַחָתוּל שׁוֹתֶה",
+        correctEmoji: "😺",
+        options: [ { emoji: "😺", id: 0 }, { emoji: "🐕", id: 1 }, { emoji: "🐴", id: 2 } ]
+      },
+      {
+        display: "הַפֶּרַח אָדֹם",
+        speech:  "הַפֶּרַח אָדֹם",
+        correctEmoji: "🌺",
+        options: [ { emoji: "🌳", id: 0 }, { emoji: "☀️", id: 1 }, { emoji: "🌺", id: 2 } ]
+      },
+      {
+        display: "הַלַּיְלָה חָשׁוּךְ",
+        speech:  "הַלַּיְלָה חָשׁוּךְ",
+        correctEmoji: "🌙",
+        options: [ { emoji: "☀️", id: 0 }, { emoji: "🌙", id: 1 }, { emoji: "⭐", id: 2 } ]
+      },
+      {
+        display: "הָאוֹר בָּהִיר",
+        speech:  "הָאוֹר בָּהִיר",
+        correctEmoji: "💡",
+        options: [ { emoji: "🌙", id: 0 }, { emoji: "🌧️", id: 1 }, { emoji: "💡", id: 2 } ]
       },
     ]
   }
@@ -544,6 +672,103 @@ let starsCollected = 0;
 const NODE_LEFTS = ['12.5%', '37.5%', '62.5%', '87.5%'];
 
 // ─────────────────────────────────────────
+//  PUZZLE MINI-GAME
+// ─────────────────────────────────────────
+// ── 15 puzzle scenes ──────────────────────
+const PUZZLES = [
+  { name:'קֶשֶׁת', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#c8ecff"/><path d="M 5,155 Q 150,-45 295,155" stroke="#FF3333" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M 20,155 Q 150,-22 280,155" stroke="#FF8800" stroke-width="17" fill="none" stroke-linecap="round"/><path d="M 35,155 Q 150,1 265,155" stroke="#FFE000" stroke-width="17" fill="none" stroke-linecap="round"/><path d="M 50,155 Q 150,24 250,155" stroke="#44CC44" stroke-width="17" fill="none" stroke-linecap="round"/><path d="M 65,155 Q 150,47 235,155" stroke="#4488FF" stroke-width="17" fill="none" stroke-linecap="round"/><path d="M 80,155 Q 150,70 220,155" stroke="#9944CC" stroke-width="17" fill="none" stroke-linecap="round"/><ellipse cx="150" cy="40" rx="55" ry="23" fill="white"/><ellipse cx="108" cy="50" rx="38" ry="20" fill="white"/><ellipse cx="192" cy="50" rx="38" ry="20" fill="white"/><ellipse cx="150" cy="58" rx="66" ry="19" fill="white"/><ellipse cx="32" cy="28" rx="24" ry="11" fill="white"/><ellipse cx="268" cy="26" rx="22" ry="10" fill="white"/><circle cx="18" cy="16" r="4" fill="#FFD700"/><circle cx="282" cy="13" r="3.5" fill="#FFD700"/><circle cx="150" cy="10" r="4.5" fill="#FFD700"/></svg>` },
+
+  { name:'שְׁקִיעָה', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#FF7043"/><rect width="300" height="90" fill="#FF8A65" opacity="0.5"/><rect width="300" height="50" fill="#FFCC02" opacity="0.35"/><circle cx="150" cy="148" r="68" fill="#FFD600"/><circle cx="150" cy="148" r="54" fill="#FFEE58"/><ellipse cx="55" cy="165" rx="85" ry="38" fill="#2E7D32"/><ellipse cx="245" cy="165" rx="85" ry="38" fill="#1B5E20"/><ellipse cx="150" cy="170" rx="75" ry="32" fill="#388E3C"/><path d="M30,45 Q36,38 42,45" stroke="#4E342E" stroke-width="2.5" fill="none"/><path d="M55,30 Q61,23 67,30" stroke="#4E342E" stroke-width="2.5" fill="none"/><path d="M220,38 Q226,31 232,38" stroke="#4E342E" stroke-width="2.5" fill="none"/><path d="M248,52 Q254,45 260,52" stroke="#4E342E" stroke-width="2.5" fill="none"/><circle cx="42" cy="22" r="5" fill="#FFF176" opacity="0.8"/><circle cx="258" cy="18" r="4" fill="#FFF176" opacity="0.8"/></svg>` },
+
+  { name:'גַּן פְּרָחִים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="100" fill="#BBDEFB"/><rect y="95" width="300" height="65" fill="#66BB6A"/><ellipse cx="150" cy="95" rx="165" ry="22" fill="#81C784"/><circle cx="255" cy="28" r="22" fill="#FDD835"/><rect x="37" y="65" width="5" height="38" fill="#5D4037"/><circle cx="40" cy="60" r="13" fill="#EF5350"/><circle cx="40" cy="60" r="6" fill="#FDD835"/><rect x="72" y="72" width="4" height="30" fill="#5D4037"/><circle cx="74" cy="68" r="10" fill="#AB47BC"/><circle cx="74" cy="68" r="5" fill="#FDD835"/><rect x="143" y="52" width="5" height="50" fill="#5D4037"/><circle cx="146" cy="48" r="15" fill="#FF7043"/><circle cx="146" cy="48" r="7" fill="#FDD835"/><rect x="215" y="62" width="5" height="42" fill="#5D4037"/><circle cx="218" cy="57" r="13" fill="#26C6DA"/><circle cx="218" cy="57" r="6" fill="#FDD835"/><rect x="260" y="70" width="4" height="33" fill="#5D4037"/><circle cx="262" cy="66" r="11" fill="#EC407A"/><circle cx="262" cy="66" r="5" fill="#FDD835"/><ellipse cx="105" cy="52" rx="13" ry="7" fill="#CE93D8" transform="rotate(-25 105 52)"/><ellipse cx="120" cy="52" rx="13" ry="7" fill="#BA68C8" transform="rotate(25 120 52)"/><rect x="112" y="46" width="2" height="12" fill="#5D4037"/></svg>` },
+
+  { name:'חָלָל', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#0D1B4B"/><circle cx="55" cy="55" r="30" fill="#ECEFF1"/><circle cx="72" cy="44" r="21" fill="#0D1B4B"/><ellipse cx="200" cy="80" rx="38" ry="38" fill="#7E57C2"/><ellipse cx="200" cy="80" rx="60" ry="14" fill="#B39DDB" opacity="0.7"/><ellipse cx="200" cy="80" rx="38" ry="38" fill="none" stroke="#9575CD" stroke-width="2"/><circle cx="26" cy="18" r="2" fill="white"/><circle cx="80" cy="8" r="1.5" fill="white"/><circle cx="130" cy="25" r="2.5" fill="white"/><circle cx="170" cy="12" r="2" fill="white"/><circle cx="245" cy="20" r="3" fill="white"/><circle cx="285" cy="35" r="2" fill="white"/><circle cx="265" cy="8" r="1.5" fill="white"/><circle cx="15" cy="45" r="1.5" fill="white"/><circle cx="100" cy="140" r="2" fill="white"/><circle cx="40" cy="120" r="1.5" fill="white"/><circle cx="270" cy="130" r="2" fill="white"/><circle cx="155" cy="145" r="1.5" fill="white"/><circle cx="130" cy="55" r="6" fill="#FF8A65"/><circle cx="130" cy="55" r="3" fill="#FF5722"/><path d="M115,55 L125,55 M135,55 L145,55 M130,40 L130,50 M130,60 L130,70" stroke="#FF8A65" stroke-width="1.5"/><circle cx="20" cy="130" r="8" fill="#4FC3F7"/><circle cx="36" cy="130" r="8" fill="#4FC3F7"/><circle cx="28" cy="122" r="8" fill="#4FC3F7"/></svg>` },
+
+  { name:'גַּלִּים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="75" fill="#87CEEB"/><circle cx="240" cy="32" r="26" fill="#FFD600"/><ellipse cx="80" cy="20" rx="26" ry="12" fill="white" opacity="0.9"/><ellipse cx="60" cy="26" rx="18" ry="10" fill="white" opacity="0.9"/><rect y="75" width="300" height="85" fill="#0288D1"/><path d="M0,90 Q50,75 100,90 Q150,105 200,90 Q250,75 300,90 L300,160 L0,160Z" fill="#0277BD"/><path d="M0,110 Q60,95 120,110 Q180,125 240,110 Q270,103 300,110 L300,160 L0,160Z" fill="#01579B"/><ellipse cx="80" cy="100" rx="18" ry="8" fill="#FFD600" opacity="0.6"/><path d="M55,88 Q65,82 70,88 L72,92 Q62,96 57,90Z" fill="#FF7043"/><path d="M55,89 L73,92 L70,97 L52,94Z" fill="#FFA726"/><path d="M180,95 Q190,89 195,95 L197,99 Q187,103 182,97Z" fill="#EC407A"/><path d="M180,96 L198,99 L195,104 L177,101Z" fill="#F48FB1"/><path d="M240,85 Q250,79 255,85 L257,89 Q247,93 242,87Z" fill="#FF7043"/><circle cx="35" cy="140" r="7" fill="#FF8A65"/><circle cx="35" cy="140" r="4" fill="#FF5722"/><circle cx="270" cy="145" r="6" fill="#FF8A65"/><circle cx="270" cy="145" r="3" fill="#FF5722"/></svg>` },
+
+  { name:'טִירָה', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#F8BBD0"/><rect width="300" height="70" fill="#CE93D8" opacity="0.5"/><rect x="105" y="60" width="90" height="100" fill="#CE93D8"/><rect x="95" y="50" width="22" height="65" fill="#BA68C8"/><rect x="183" y="50" width="22" height="65" fill="#BA68C8"/><rect x="85" y="42" width="22" height="16" fill="#CE93D8"/><rect x="173" y="42" width="22" height="16" fill="#CE93D8"/><rect x="86" y="38" width="6" height="10" fill="#BA68C8"/><rect x="96" y="38" width="6" height="10" fill="#BA68C8"/><rect x="106" y="38" width="6" height="10" fill="#BA68C8"/><rect x="174" y="38" width="6" height="10" fill="#BA68C8"/><rect x="184" y="38" width="6" height="10" fill="#BA68C8"/><rect x="194" y="38" width="6" height="10" fill="#BA68C8"/><rect x="138" y="90" width="24" height="30" fill="#8D6E63" rx="12"/><path d="M150,28 L130,55 L170,55Z" fill="#E91E63"/><path d="M106,22 L92,45 L120,45Z" fill="#9C27B0"/><path d="M194,22 L180,45 L208,45Z" fill="#9C27B0"/><circle cx="40" cy="30" r="5" fill="#FFF176"/><circle cx="80" cy="15" r="4" fill="#FFF176"/><circle cx="220" cy="20" r="5" fill="#FFF176"/><circle cx="265" cy="35" r="4" fill="#FFF176"/><circle cx="150" cy="10" r="6" fill="#FFF176"/><circle cx="30" cy="80" r="4" fill="#FFF176"/><circle cx="270" cy="75" r="4" fill="#FFF176"/></svg>` },
+
+  { name:'פַּרְפַּר', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#F3E5F5"/><ellipse cx="100" cy="65" rx="75" ry="50" fill="#CE93D8" opacity="0.9"/><ellipse cx="200" cy="65" rx="75" ry="50" fill="#BA68C8" opacity="0.9"/><ellipse cx="95" cy="95" rx="50" ry="35" fill="#E040FB" opacity="0.8"/><ellipse cx="205" cy="95" rx="50" ry="35" fill="#D500F9" opacity="0.8"/><circle cx="100" cy="60" r="18" fill="#FFF176" opacity="0.6"/><circle cx="200" cy="60" r="18" fill="#FFF176" opacity="0.6"/><circle cx="95" cy="90" r="12" fill="#FF80AB" opacity="0.6"/><circle cx="205" cy="90" r="12" fill="#FF80AB" opacity="0.6"/><path d="M150,35 Q145,80 150,125" stroke="#5D4037" stroke-width="3" fill="none"/><path d="M148,35 Q138,25 128,32" stroke="#5D4037" stroke-width="2" fill="none"/><path d="M152,35 Q162,25 172,32" stroke="#5D4037" stroke-width="2" fill="none"/><circle cx="30" cy="130" r="8" fill="#FF8A65"/><circle cx="30" cy="130" r="4" fill="#FF5722" opacity="0.7"/><circle cx="270" cy="125" r="8" fill="#66BB6A"/><circle cx="270" cy="125" r="4" fill="#43A047" opacity="0.7"/><circle cx="150" cy="145" r="8" fill="#FF80AB"/><circle cx="150" cy="145" r="4" fill="#E91E63" opacity="0.7"/></svg>` },
+
+  { name:'כַּדּוּר פּוֹרֵחַ', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#E1F5FE"/><ellipse cx="50" cy="35" rx="30" ry="14" fill="white" opacity="0.9"/><ellipse cx="35" cy="42" rx="20" ry="11" fill="white" opacity="0.9"/><ellipse cx="240" cy="28" rx="28" ry="12" fill="white" opacity="0.9"/><ellipse cx="258" cy="36" rx="20" ry="10" fill="white" opacity="0.9"/><path d="M30,148 Q150,148 270,148" stroke="#8D6E63" stroke-width="3"/><line x1="90" y1="148" x2="120" y2="100" stroke="#8D6E63" stroke-width="2"/><line x1="150" y1="148" x2="150" y2="100" stroke="#8D6E63" stroke-width="2"/><line x1="210" y1="148" x2="180" y2="100" stroke="#8D6E63" stroke-width="2"/><ellipse cx="150" cy="75" rx="65" ry="75" fill="#FF3333"/><path d="M85,75 Q150,10 215,75" fill="#FF8800" stroke="none"/><path d="M87,90 Q150,30 213,90" fill="#FFE000" stroke="none"/><path d="M90,105 Q150,50 210,105" fill="#44CC44" stroke="none"/><path d="M95,120 Q150,70 205,120" fill="#4488FF" stroke="none"/><ellipse cx="150" cy="75" rx="65" ry="75" fill="none" stroke="#BF360C" stroke-width="2"/><path d="M85,75 L215,75" stroke="#BF360C" stroke-width="1.5" opacity="0.5"/><line x1="150" y1="0" x2="150" y2="150" stroke="#BF360C" stroke-width="1.5" opacity="0.5"/><path d="M20,60 Q25,53 30,60" stroke="#37474F" stroke-width="2" fill="none"/><path d="M265,70 Q270,63 275,70" stroke="#37474F" stroke-width="2" fill="none"/></svg>` },
+
+  { name:'יוֹם שֶׁלֶג', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="110" fill="#B3E5FC"/><rect y="110" width="300" height="50" fill="#E3F2FD"/><ellipse cx="150" cy="108" rx="170" ry="25" fill="#ECEFF1"/><path d="M30,110 L50,60 L70,110Z" fill="#388E3C"/><path d="M20,110 L50,45 L80,110Z" fill="#2E7D32"/><path d="M220,110 L245,55 L270,110Z" fill="#388E3C"/><path d="M210,110 L245,40 L280,110Z" fill="#2E7D32"/><circle cx="150" cy="128" r="18" fill="white" stroke="#90A4AE" stroke-width="1.5"/><circle cx="150" cy="103" r="14" fill="white" stroke="#90A4AE" stroke-width="1.5"/><circle cx="150" cy="82" r="11" fill="white" stroke="#90A4AE" stroke-width="1.5"/><circle cx="150" cy="82" r="3" fill="#FF7043"/><line x1="135" y1="100" x2="128" y2="96" stroke="#FF7043" stroke-width="2"/><line x1="165" y1="100" x2="172" y2="96" stroke="#FF7043" stroke-width="2"/><circle cx="147" cy="79" r="2" fill="#37474F"/><circle cx="153" cy="79" r="2" fill="#37474F"/><circle cx="150" cy="84" r="1.5" fill="#37474F"/><circle cx="30" cy="30" r="3" fill="white" opacity="0.9"/><circle cx="80" cy="15" r="4" fill="white" opacity="0.9"/><circle cx="130" cy="35" r="3" fill="white" opacity="0.9"/><circle cx="200" cy="20" r="3.5" fill="white" opacity="0.9"/><circle cx="260" cy="30" r="3" fill="white" opacity="0.9"/><circle cx="55" cy="50" r="2.5" fill="white" opacity="0.9"/><circle cx="240" cy="55" r="2.5" fill="white" opacity="0.9"/></svg>` },
+
+  { name:'מִתַּחַת לַמַּיִם', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#006994"/><rect width="300" height="30" fill="#0288D1" opacity="0.7"/><path d="M0,25 Q75,10 150,25 Q225,40 300,25 L300,0 L0,0Z" fill="#29B6F6" opacity="0.5"/><ellipse cx="50" cy="130" rx="30" ry="18" fill="#2E7D32"/><ellipse cx="80" cy="120" rx="20" ry="28" fill="#388E3C" opacity="0.8"/><ellipse cx="240" cy="125" rx="28" ry="20" fill="#1B5E20"/><ellipse cx="270" cy="115" rx="18" ry="25" fill="#2E7D32" opacity="0.8"/><ellipse cx="150" cy="145" rx="35" ry="15" fill="#FF7043"/><ellipse cx="140" cy="138" rx="20" ry="10" fill="#FF8A65" opacity="0.7"/><path d="M100,70 Q115,62 120,70 L118,76 Q103,78 100,72Z" fill="#FF3333"/><path d="M100,71 L120,76 L117,82 L97,77Z" fill="#FF8800"/><circle cx="97" cy="68" r="3" fill="white"/><circle cx="97" cy="68" r="1.5" fill="#1A237E"/><path d="M180,50 Q198,42 205,50 L203,57 Q185,60 180,54Z" fill="#FFD600"/><path d="M180,51 L205,57 L202,64 L177,58Z" fill="#FF8800"/><circle cx="176" cy="47" r="3" fill="white"/><circle cx="176" cy="47" r="1.5" fill="#1A237E"/><circle cx="40" cy="50" r="5" fill="#E1F5FE" opacity="0.6"/><circle cx="160" cy="30" r="4" fill="#E1F5FE" opacity="0.6"/><circle cx="250" cy="60" r="5" fill="#E1F5FE" opacity="0.6"/><circle cx="130" cy="90" r="3" fill="#E1F5FE" opacity="0.6"/><circle cx="210" cy="100" r="4" fill="#E1F5FE" opacity="0.6"/></svg>` },
+
+  { name:'לַיְלָה כּוֹכָבִים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#1A237E"/><rect width="300" height="160" fill="#283593" opacity="0.5"/><path d="M0,120 Q75,105 150,115 Q225,125 300,110 L300,160 L0,160Z" fill="#1B5E20"/><rect x="195" y="100" width="40" height="45" fill="#37474F"/><rect x="205" y="100" width="20" height="20" fill="#FFF176" opacity="0.8"/><path d="M188,100 L215,78 L242,100Z" fill="#455A64"/><circle cx="60" cy="35" r="22" fill="#FFF9C4"/><circle cx="78" cy="28" r="16" fill="#1A237E"/><circle cx="20" cy="15" r="3" fill="white"/><circle cx="45" cy="8" r="2.5" fill="white"/><circle cx="110" cy="12" r="3.5" fill="white"/><circle cx="155" cy="20" r="2" fill="white"/><circle cx="185" cy="10" r="3" fill="white"/><circle cx="230" cy="18" r="2.5" fill="white"/><circle cx="265" cy="8" r="3" fill="white"/><circle cx="285" cy="25" r="2" fill="white"/><circle cx="140" cy="45" r="2" fill="white"/><circle cx="175" cy="35" r="3" fill="white"/><circle cx="250" cy="42" r="2.5" fill="white"/><circle cx="290" cy="55" r="2" fill="white"/><circle cx="20" cy="60" r="2.5" fill="white"/><circle cx="130" cy="70" r="2" fill="white"/><path d="M155,15 L157,22 L164,22 L158,27 L160,34 L155,29 L150,34 L152,27 L146,22 L153,22Z" fill="#FFD700" opacity="0.9"/></svg>` },
+
+  { name:'שְׂדֵה חַמָּנִיּוֹת', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="90" fill="#87CEEB"/><rect y="90" width="300" height="70" fill="#558B2F"/><ellipse cx="150" cy="90" rx="170" ry="22" fill="#689F38"/><rect x="47" y="45" width="7" height="55" fill="#558B2F"/><circle cx="50" cy="40" r="20" fill="#FDD835"/><circle cx="50" cy="40" r="10" fill="#8D6E63"/><rect x="143" y="30" width="8" height="70" fill="#558B2F"/><circle cx="147" cy="24" r="24" fill="#FDD835"/><circle cx="147" cy="24" r="12" fill="#8D6E63"/><rect x="243" y="42" width="7" height="58" fill="#558B2F"/><circle cx="247" cy="36" r="20" fill="#FDD835"/><circle cx="247" cy="36" r="10" fill="#8D6E63"/><rect x="95" y="60" width="6" height="42" fill="#558B2F"/><circle cx="98" cy="55" r="16" fill="#FDD835"/><circle cx="98" cy="55" r="8" fill="#8D6E63"/><rect x="195" y="55" width="6" height="45" fill="#558B2F"/><circle cx="198" cy="49" r="17" fill="#FDD835"/><circle cx="198" cy="49" r="8" fill="#8D6E63"/><circle cx="240" cy="22" r="22" fill="#FFF176" opacity="0.9"/><path d="M15,72 Q20,65 25,72" stroke="#37474F" stroke-width="2" fill="none"/><path d="M270,60 Q275,53 280,60" stroke="#37474F" stroke-width="2" fill="none"/></svg>` },
+
+  { name:'תּוֹת שָׂדֶה', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#A5D6A7"/><ellipse cx="150" cy="80" rx="52" ry="60" fill="#EF5350"/><ellipse cx="150" cy="75" rx="44" ry="52" fill="#E53935"/><circle cx="130" cy="68" r="4" fill="#FFCDD2" opacity="0.8"/><circle cx="155" cy="55" r="3" fill="#FFCDD2" opacity="0.8"/><circle cx="168" cy="75" r="4" fill="#FFCDD2" opacity="0.8"/><circle cx="138" cy="90" r="3" fill="#FFCDD2" opacity="0.8"/><circle cx="162" cy="95" r="3.5" fill="#FFCDD2" opacity="0.8"/><path d="M140,22 Q150,5 160,22" fill="#43A047"/><path d="M130,28 Q150,10 170,28" fill="#2E7D32" opacity="0.7"/><ellipse cx="55" cy="110" rx="30" ry="35" fill="#E53935"/><ellipse cx="55" cy="107" rx="25" ry="29" fill="#EF5350"/><circle cx="48" cy="100" r="3" fill="#FFCDD2" opacity="0.8"/><circle cx="62" cy="112" r="2.5" fill="#FFCDD2" opacity="0.8"/><path d="M49,78 Q55,67 61,78" fill="#43A047"/><ellipse cx="245" cy="115" rx="30" ry="33" fill="#E53935"/><ellipse cx="245" cy="112" rx="25" ry="27" fill="#EF5350"/><circle cx="238" cy="106" r="3" fill="#FFCDD2" opacity="0.8"/><circle cx="252" cy="118" r="2.5" fill="#FFCDD2" opacity="0.8"/><path d="M239,84 Q245,73 251,84" fill="#43A047"/><circle cx="30" cy="30" r="6" fill="white" opacity="0.9"/><circle cx="30" cy="30" r="3" fill="#FFD700"/><circle cx="270" cy="40" r="6" fill="white" opacity="0.9"/><circle cx="270" cy="40" r="3" fill="#FFD700"/><circle cx="150" cy="145" r="6" fill="white" opacity="0.9"/><circle cx="150" cy="145" r="3" fill="#FFD700"/></svg>` },
+
+  { name:'עוּגִיָּה', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#FCE4EC"/><rect x="105" y="95" width="90" height="55" rx="8" fill="#BCAAA4"/><path d="M95,95 Q150,88 205,95" fill="#D7CCC8" stroke="none"/><ellipse cx="150" cy="95" rx="55" ry="12" fill="#D7CCC8"/><path d="M105,85 Q150,70 195,85 L195,95 Q150,90 105,95Z" fill="#FF8A65"/><path d="M108,75 Q150,60 192,75 L195,85 Q150,72 105,85Z" fill="#FF7043"/><ellipse cx="150" cy="60" rx="45" ry="18" fill="#FF3D00"/><rect x="100" y="42" width="6" height="20" fill="#FF3D00"/><rect x="145" y="36" width="6" height="26" fill="#FF3D00"/><rect x="190" y="42" width="6" height="20" fill="#FF3D00"/><path d="M97,42 Q103,32 109,42" fill="#FF8800" stroke="none"/><path d="M142,36 Q148,26 154,36" fill="#FF8800" stroke="none"/><path d="M187,42 Q193,32 199,42" fill="#FF8800" stroke="none"/><circle cx="127" cy="82" r="5" fill="#CE93D8"/><circle cx="150" cy="78" r="5" fill="#80DEEA"/><circle cx="173" cy="82" r="5" fill="#FFF176"/><circle cx="138" cy="90" r="4" fill="#FF80AB"/><circle cx="162" cy="90" r="4" fill="#A5D6A7"/><circle cx="30" cy="25" r="6" fill="#FF80AB"/><circle cx="270" cy="30" r="6" fill="#80DEEA"/><circle cx="50" cy="130" r="5" fill="#FFF176"/><circle cx="250" cy="125" r="5" fill="#CE93D8"/><circle cx="150" cy="15" r="7" fill="#FF80AB"/></svg>` },
+
+  { name:'גְּלִידָה', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#FFF8E1"/><path d="M130,155 L150,80 L170,155Z" fill="#BCAAA4"/><ellipse cx="150" cy="82" rx="28" ry="25" fill="#FF8A65"/><ellipse cx="150" cy="62" rx="26" ry="24" fill="#FF80AB"/><ellipse cx="150" cy="44" rx="24" ry="22" fill="#80DEEA"/><path d="M142,36 Q148,28 156,35" fill="white" opacity="0.6"/><path d="M60,155 L78,90 L96,155Z" fill="#BCAAA4"/><ellipse cx="78" cy="92" rx="24" ry="22" fill="#FFD54F"/><ellipse cx="78" cy="74" rx="22" ry="21" fill="#A5D6A7"/><path d="M70,65 Q76,57 84,64" fill="white" opacity="0.6"/><path d="M200,155 L222,90 L244,155Z" fill="#BCAAA4"/><ellipse cx="222" cy="92" rx="26" ry="23" fill="#CE93D8"/><ellipse cx="222" cy="72" rx="24" ry="22" fill="#EF9A9A"/><ellipse cx="222" cy="54" rx="22" ry="20" fill="#FFF176"/><path d="M214,45 Q220,37 228,44" fill="white" opacity="0.6"/><circle cx="30" cy="30" r="8" fill="#FF80AB"/><circle cx="270" cy="25" r="7" fill="#80DEEA"/><circle cx="50" cy="140" r="6" fill="#FFD54F"/><circle cx="255" cy="140" r="6" fill="#A5D6A7"/><circle cx="150" cy="150" r="5" fill="#CE93D8"/><circle cx="15" cy="80" r="5" fill="#FF8A65"/><circle cx="285" cy="90" r="5" fill="#FFF176"/></svg>` },
+];
+
+let currentPuzzleSvg = PUZZLES[0].svg;
+let puzzleOrder  = [];
+let selectedPos  = null;
+
+function initPuzzle() {
+  currentPuzzleSvg = PUZZLES[Math.floor(Math.random() * PUZZLES.length)].svg;
+  do { puzzleOrder = fisherYates([0,1,2,3,4,5]); }
+  while (puzzleOrder.join() === '0,1,2,3,4,5');
+  selectedPos = null;
+  document.getElementById('puzzleMsg').textContent = '';
+  document.getElementById('puzzleDoneBtn').style.display = 'none';
+  renderPuzzle();
+}
+
+function renderPuzzle() {
+  const grid = document.getElementById('puzzleGrid');
+  grid.innerHTML = '';
+  puzzleOrder.forEach((pieceId, pos) => {
+    const col = pieceId % 3;
+    const row = Math.floor(pieceId / 3);
+    const ox  = -col * 100;
+    const oy  = -row * 80;
+    const piece = document.createElement('div');
+    piece.className = 'puzzle-piece' + (pos === selectedPos ? ' p-selected' : '');
+    piece.innerHTML = `<div class="piece-inner" style="transform:translate(${ox}px,${oy}px)">${currentPuzzleSvg}</div>`;
+    piece.addEventListener('click', () => onPieceClick(pos));
+    grid.appendChild(piece);
+  });
+}
+
+function onPieceClick(pos) {
+  if (selectedPos === null) {
+    selectedPos = pos; renderPuzzle();
+  } else if (selectedPos === pos) {
+    selectedPos = null; renderPuzzle();
+  } else {
+    [puzzleOrder[selectedPos], puzzleOrder[pos]] = [puzzleOrder[pos], puzzleOrder[selectedPos]];
+    selectedPos = null;
+    renderPuzzle();
+    checkPuzzleSolved();
+  }
+}
+
+function checkPuzzleSolved() {
+  if (puzzleOrder.join(',') !== '0,1,2,3,4,5') return;
+  document.querySelectorAll('.puzzle-piece').forEach(p => p.classList.add('p-done'));
+  document.getElementById('puzzleMsg').textContent = 'כָּל הַחֲלָקִים בִּמְקוֹמָם! 🌈✨';
+  burstStars(); playFanfare();
+  setTimeout(() => burstStars(), 350);
+  setTimeout(() => burstStars(), 700);
+  setTimeout(() => { document.getElementById('puzzleDoneBtn').style.display = 'inline-block'; }, 900);
+  setTimeout(showFinalCelebration, 2800);
+}
+
+function showFinalCelebration() {
+  showScreen('screenGameDone');
+  burstStars(); playFanfare();
+  setTimeout(() => burstStars(), 300);
+  setTimeout(() => burstStars(), 650);
+}
+
+// ─────────────────────────────────────────
 //  SCREEN HELPERS
 // ─────────────────────────────────────────
 function showScreen(id) {
@@ -562,11 +787,21 @@ function startGame() {
   loadLevel();
 }
 
+function fisherYates(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function loadLevel() {
   const lv = LEVELS[level];
   document.getElementById('levelBadge').textContent = lv.name;
-  // shuffle a copy of items
-  shuffledItems = [...lv.items].sort(() => Math.random() - 0.5);
+  // Pick a fresh random subset each session so words don't repeat the same way
+  const n = lv.type === 'sentence' ? 6 : 8;
+  shuffledItems = fisherYates(lv.items).slice(0, n);
   itemIdx = 0;
   setMode(lv.type);
   loadItem();
@@ -585,7 +820,7 @@ function loadItem() {
   canAnswer = true;
 
   if (lv.type === 'word') {
-    loadWordItem(item, shuffledItems);
+    loadWordItem(item, lv.items);   // full pool for diverse wrong options
   } else {
     loadSentenceItem(item);
   }
@@ -597,11 +832,9 @@ function loadWordItem(item, pool) {
   document.getElementById('wordFeedback').textContent = '';
   document.getElementById('wordFeedback').className = 'feedback';
 
-  // 2 wrong options from pool, then shuffle
-  const wrongs = pool.filter(i => i.display !== item.display)
-                     .sort(() => Math.random() - 0.5)
-                     .slice(0, 2);
-  const opts = [item, ...wrongs].sort(() => Math.random() - 0.5);
+  // 2 wrong options from full pool, then shuffle
+  const wrongs = fisherYates(pool.filter(i => i.display !== item.display)).slice(0, 2);
+  const opts = fisherYates([item, ...wrongs]);
 
   const container = document.getElementById('wordOptions');
   container.innerHTML = '';
@@ -753,9 +986,12 @@ function continueJourney() {
 }
 
 function openPrize() {
-  burstStars(); burstStars();
-  playFanfare();
-  setTimeout(() => showScreen('screenGameDone'), 500);
+  burstStars();
+  playLevelSound();
+  setTimeout(() => {
+    showScreen('screenPuzzle');
+    initPuzzle();
+  }, 400);
 }
 
 function nextLevel() {
