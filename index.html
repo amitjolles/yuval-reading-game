@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>משחק הקריאה של יובל</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans Hebrew', 'Arial Hebrew', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: linear-gradient(135deg, #ff9ff3 0%, #ffeaa7 35%, #a29bfe 70%, #fd79a8 100%);
+      background-size: 300% 300%;
+      animation: gradientShift 10s ease infinite;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 620px;
+    }
+    .screen.active { display: flex; }
+
+    /* ── CARD ── */
+    .card {
+      background: rgba(255, 255, 255, 0.93);
+      border-radius: 32px;
+      padding: 28px 24px;
+      width: 100%;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    h1 {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      font-weight: 900;
+      color: #d63090;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .subtitle {
+      font-size: clamp(1rem, 3.5vw, 1.25rem);
+      color: #555;
+      text-align: center;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      border: none;
+      border-radius: 22px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.15s;
+      line-height: 1.3;
+    }
+    .btn:active { transform: scale(0.95); }
+
+    .btn-start {
+      background: linear-gradient(135deg, #fd79a8, #d63090);
+      color: #fff;
+      font-size: clamp(1.4rem, 5vw, 1.9rem);
+      padding: 18px 52px;
+      box-shadow: 0 6px 20px rgba(214,48,144,0.45);
+    }
+    .btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(214,48,144,0.5); }
+
+    .btn-hear {
+      background: linear-gradient(135deg, #74b9ff, #0984e3);
+      color: #fff;
+      font-size: clamp(1rem, 3.5vw, 1.2rem);
+      padding: 12px 28px;
+      box-shadow: 0 4px 14px rgba(9,132,227,0.4);
+    }
+    .btn-hear:hover { transform: translateY(-2px); }
+
+    .btn-next {
+      background: linear-gradient(135deg, #55efc4, #00b894);
+      color: #fff;
+      font-size: clamp(1.2rem, 4vw, 1.5rem);
+      padding: 15px 42px;
+      box-shadow: 0 6px 18px rgba(0,184,148,0.4);
+    }
+    .btn-next:hover { transform: translateY(-3px); }
+
+    /* ── WORD OPTION BUTTONS ── */
+    .options-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .word-btn {
+      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+      color: #fff;
+      font-size: clamp(1.6rem, 6vw, 2.2rem);
+      padding: 14px 22px;
+      border-radius: 18px;
+      min-width: 130px;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 14px rgba(108,92,231,0.4);
+    }
+    .word-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(108,92,231,0.5); }
+
+    .emoji-btn {
+      background: rgba(255,255,255,0.85);
+      border: 3px solid #a29bfe;
+      color: #000;
+      font-size: clamp(2.2rem, 9vw, 3.2rem);
+      padding: 14px 20px;
+      border-radius: 20px;
+      min-width: 100px;
+    }
+    .emoji-btn:hover { transform: scale(1.08); border-color: #6c5ce7; }
+
+    /* Answer feedback states */
+    .word-btn.correct, .emoji-btn.correct {
+      background: linear-gradient(135deg, #55efc4, #00b894) !important;
+      border-color: #00b894;
+      animation: popCorrect 0.4s ease;
+    }
+    .word-btn.wrong, .emoji-btn.wrong {
+      background: linear-gradient(135deg, #ff7675, #d63031) !important;
+      border-color: #d63031;
+      animation: shakeIt 0.4s ease;
+    }
+    @keyframes popCorrect {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shakeIt {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-10px); }
+      75%      { transform: translateX(10px); }
+    }
+
+    /* ── EMOJI DISPLAY ── */
+    .big-emoji {
+      font-size: clamp(4rem, 16vw, 7rem);
+      line-height: 1;
+      animation: floatBob 3s ease-in-out infinite;
+    }
+    @keyframes floatBob {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
+    }
+
+    /* ── SENTENCE DISPLAY ── */
+    .sentence-text {
+      font-size: clamp(1.8rem, 6.5vw, 2.6rem);
+      font-weight: 900;
+      color: #6c5ce7;
+      text-align: center;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      width: 100%;
+      background: #f0e6ff;
+      border-radius: 12px;
+      height: 14px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #fd79a8, #d63090);
+      border-radius: 12px;
+      transition: width 0.5s ease;
+    }
+
+    .level-badge {
+      background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+      color: #6c4a00;
+      font-size: clamp(0.85rem, 3vw, 1rem);
+      font-weight: 700;
+      padding: 6px 20px;
+      border-radius: 20px;
+    }
+
+    /* ── FEEDBACK TEXT ── */
+    .feedback {
+      font-size: clamp(1.1rem, 4vw, 1.4rem);
+      font-weight: 700;
+      color: #00b894;
+      min-height: 2em;
+      text-align: center;
+    }
+    .feedback.wrong-msg { color: #d63031; }
+
+    /* ── DECORATIVE STARS ── */
+    .deco { font-size: clamp(1.8rem, 6vw, 2.6rem); }
+
+    /* ── FLOATING STARS CANVAS ── */
+    #starCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── CELEBRATION ── */
+    .celebration { font-size: clamp(2.5rem, 10vw, 4rem); animation: celebrate 0.7s ease; }
+    @keyframes celebrate {
+      0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* ── JOURNEY MAP ── */
+    .map-title {
+      font-size: clamp(1.3rem, 5vw, 1.8rem);
+      font-weight: 900;
+      color: #d63090;
+    }
+    .stars-bar {
+      font-size: clamp(1.6rem, 7vw, 2.2rem);
+      letter-spacing: 6px;
+      min-height: 2rem;
+    }
+    .journey-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 70px;
+      margin: 8px 0;
+    }
+    .journey-road {
+      position: absolute;
+      top: 28px;
+      left: 11%;
+      right: 11%;
+      height: 12px;
+      background: linear-gradient(90deg, #fdcb6e, #fd79a8, #a29bfe);
+      border-radius: 6px;
+      z-index: 0;
+    }
+    .journey-nodes {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      position: relative;
+      z-index: 1;
+    }
+    .jnode {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      font-size: 1.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      justify-self: center;
+      background: #ddd;
+      color: #aaa;
+      font-weight: 700;
+      transition: background 0.5s, box-shadow 0.5s, transform 0.3s;
+    }
+    .jnode.done {
+      background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+      color: #6c4a00;
+      box-shadow: 0 0 20px rgba(253,203,110,0.85);
+    }
+    .jnode.prize-lock {
+      background: linear-gradient(135deg, #d8b4fe, #a29bfe);
+      color: #fff;
+    }
+    .jnode.prize-open {
+      background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
+      color: #fff;
+      animation: prizeGlow 0.7s infinite alternate;
+    }
+    @keyframes prizeGlow {
+      from { box-shadow: 0 0 15px rgba(255,215,0,0.5); }
+      to   { box-shadow: 0 0 40px rgba(255,140,0,1); transform: scale(1.15); }
+    }
+    .journey-char {
+      position: absolute;
+      bottom: 0;
+      font-size: 2.4em;
+      transform: translateX(-50%);
+      transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .map-msg {
+      font-size: clamp(1rem, 3.5vw, 1.2rem);
+      font-weight: 700;
+      color: #6c5ce7;
+      text-align: center;
+      min-height: 1.8em;
+    }
+    /* ── PRIZE SCREEN ── */
+    .prize-crown {
+      font-size: clamp(4rem, 16vw, 6rem);
+      animation: crownFloat 2s ease-in-out infinite;
+    }
+    @keyframes crownFloat {
+      0%,100% { transform: translateY(0) rotate(-5deg); }
+      50%      { transform: translateY(-15px) rotate(5deg); }
+    }
+
+    /* ── RESPONSIVE TWEAKS ── */
+    @media (max-width: 400px) {
+      .card { padding: 20px 14px; gap: 10px; }
+      .word-btn { min-width: 110px; }
+      .jnode { width: 48px; height: 48px; font-size: 1.2em; }
+    }
+  </style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+
+<!-- ════════════ WELCOME ════════════ -->
+<div class="screen active" id="screenWelcome">
+  <div class="card">
+    <div class="deco">&#x1F31F;&#x1F4DA;&#x1F98B;</div>
+    <h1>&#x05DE;&#x05E9;&#x05D7;&#x05E7; &#x05D4;&#x05E7;&#x05E8;&#x05D9;&#x05D0;&#x05D4;! &#x2728;</h1>
+    <p class="subtitle">&#x05D1;&#x05D5;&#x05D0;&#x05D9; &#x05E0;&#x05EA;&#x05E8;&#x05D2;&#x05DC; &#x05DC;&#x05E7;&#x05E8;&#x05D5;&#x05D0; &#x05DE;&#x05D9;&#x05DC;&#x05D9;&#x05DD; &#x05D9;&#x05D7;&#x05D3;!</p>
+    <div class="deco">&#x1F451;&#x1F49C;&#x2B50;</div>
+    <button class="btn btn-start" onclick="startGame()">&#x05D1;&#x05D5;&#x05D0;&#x05D9; &#x05E0;&#x05E9;&#x05D7;&#x05E7;! &#x1F3AE;</button>
+  </div>
+</div>
+
+<!-- ════════════ GAME ════════════ -->
+<div class="screen" id="screenGame">
+  <div class="card">
+    <div class="level-badge" id="levelBadge"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+    <!-- Word mode (levels 1 & 2) -->
+    <div id="wordMode">
+      <div class="big-emoji" id="wordEmoji"></div>
+      <button class="btn btn-hear" onclick="hearWord()">&#x1F50A; &#x05E9;&#x05DE;&#x05E2;&#x05D9; &#x05D0;&#x05EA; &#x05D4;&#x05DE;&#x05D9;&#x05DC;&#x05D4;</button>
+      <div class="options-grid" id="wordOptions"></div>
+      <div class="feedback" id="wordFeedback"></div>
+    </div>
+
+    <!-- Sentence mode (level 3) -->
+    <div id="sentenceMode" style="display:none">
+      <div class="sentence-text" id="sentenceText"></div>
+      <button class="btn btn-hear" onclick="hearSentence()">&#x1F50A; &#x05E9;&#x05DE;&#x05E2;&#x05D9; &#x05D0;&#x05EA; &#x05D4;&#x05DE;&#x05E9;&#x05E4;&#x05D8;</button>
+      <p class="subtitle">&#x05D1;&#x05D7;&#x05E8;&#x05D9; &#x05D0;&#x05EA; &#x05D4;&#x05EA;&#x05DE;&#x05D5;&#x05E0;&#x05D4; &#x05D4;&#x05DE;&#x05EA;&#x05D0;&#x05D9;&#x05DE;&#x05D4;:</p>
+      <div class="options-grid" id="emojiOptions"></div>
+      <div class="feedback" id="sentenceFeedback"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ JOURNEY MAP ════════════ -->
+<div class="screen" id="screenMap">
+  <div class="card">
+    <p class="map-title">🗺️ המסע של יובל</p>
+    <div class="stars-bar" id="starsBar"></div>
+    <div class="journey-wrap">
+      <div class="journey-road"></div>
+      <div class="journey-nodes">
+        <div class="jnode done" id="jn0">🏠</div>
+        <div class="jnode" id="jn1">?</div>
+        <div class="jnode" id="jn2">?</div>
+        <div class="jnode prize-lock" id="jn3">🎁</div>
+      </div>
+      <div class="journey-char" id="jchar" style="left:12.5%">👧</div>
+    </div>
+    <p class="map-msg" id="mapMsg"></p>
+    <button class="btn btn-next" id="mapContinueBtn" style="display:none" onclick="continueJourney()">קְדִימָה! ➡️</button>
+    <button class="btn btn-start" id="mapPrizeBtn" style="display:none" onclick="openPrize()">פִּתְחִי אֶת הַפְּרָס! 🎁</button>
+  </div>
+</div>
+
+<!-- ════════════ PRIZE / GAME COMPLETE ════════════ -->
+<div class="screen" id="screenGameDone">
+  <div class="card">
+    <div class="prize-crown">👑</div>
+    <h1 style="color:#d63090;">אַלּוּפָה!</h1>
+    <p class="subtitle">
+      אָסַפְתְּ 3 כּוֹכָבִים ⭐⭐⭐<br/>
+      אַתְּ קוֹרֵאת מַמָּשׁ נִפְלָא! ✨
+    </p>
+    <div class="deco">🌸🦋🌸</div>
+    <div class="deco">🎊🎉🎊</div>
+    <button class="btn btn-start" onclick="startGame()">שְׂחָקִי שׁוּב! 🔄</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+//  GAME DATA
+// ─────────────────────────────────────────
+const LEVELS = [
+  {
+    name: "שלב 1 - מילים קצרות",
+    type: "word",
+    items: [
+      { display: "דָּג",    speech: "דָּג",    emoji: "🐟" },
+      { display: "יָם",    speech: "יָם",    emoji: "🌊" },
+      { display: "לֵב",    speech: "לֵב",    emoji: "❤️" },
+      { display: "עֵץ",    speech: "עֵץ",    emoji: "🌳" },
+      { display: "כֶּלֶב",  speech: "כֶּלֶב",  emoji: "🐕" },
+      { display: "חָתוּל",  speech: "חָתוּל",  emoji: "😺" },
+      { display: "פֶּרַח",  speech: "פֶּרַח",  emoji: "🌸" },
+      { display: "בַּיִת",  speech: "בַּיִת",  emoji: "🏠" },
+      { display: "אִמָּא",  speech: "אִמָּא",  emoji: "👩" },
+      { display: "שֶׁמֶשׁ", speech: "שֶׁמֶשׁ", emoji: "☀️" },
+    ]
+  },
+  {
+    name: "שלב 2 - מילים ארוכות",
+    type: "word",
+    items: [
+      { display: "פַּרְפַּר",  speech: "פַּרְפַּר",  emoji: "🦋" },
+      { display: "תַּפּוּחַ",  speech: "תַּפּוּחַ",  emoji: "🍎" },
+      { display: "צִפּוֹר",   speech: "צִפּוֹר",   emoji: "🐦" },
+      { display: "עוּגָה",    speech: "עוּגָה",    emoji: "🎂" },
+      { display: "כַּדּוּר",  speech: "כַּדּוּר",  emoji: "⚽" },
+      { display: "אַרְיֵה",   speech: "אַרְיֵה",   emoji: "🦁" },
+      { display: "גֶּשֶׁם",   speech: "גֶּשֶׁם",   emoji: "🌧️" },
+      { display: "שֶׁלֶג",    speech: "שֶׁלֶג",    emoji: "❄️" },
+      { display: "רַכֶּבֶת",  speech: "רַכֶּבֶת",  emoji: "🚂" },
+      { display: "נַעַל",    speech: "נַעַל",    emoji: "👟" },
+    ]
+  },
+  {
+    name: "שלב 3 - משפטים",
+    type: "sentence",
+    items: [
+      {
+        display: "הַכֶּלֶב שָׂמֵחַ",
+        speech:  "הַכֶּלֶב שָׂמֵחַ",
+        correctEmoji: "🐕",
+        options: [
+          { emoji: "🐕",  id: 0 },
+          { emoji: "😺",  id: 1 },
+          { emoji: "🌸",  id: 2 },
+        ]
+      },
+      {
+        display: "הָאַרְיֵה גָּדוֹל",
+        speech:  "הָאַרְיֵה גָּדוֹל",
+        correctEmoji: "🦁",
+        options: [
+          { emoji: "🐟",  id: 0 },
+          { emoji: "🦁",  id: 1 },
+          { emoji: "🌸",  id: 2 },
+        ]
+      },
+      {
+        display: "הַשֶּׁמֶשׁ חַמָּה",
+        speech:  "הַשֶּׁמֶשׁ חַמָּה",
+        correctEmoji: "☀️",
+        options: [
+          { emoji: "🌙",  id: 0 },
+          { emoji: "❄️",  id: 1 },
+          { emoji: "☀️",  id: 2 },
+        ]
+      },
+      {
+        display: "הַיַּלְדָּה שְׂמֵחָה",
+        speech:  "הַיַּלְדָּה שְׂמֵחָה",
+        correctEmoji: "👧",
+        options: [
+          { emoji: "👦",  id: 0 },
+          { emoji: "👩",  id: 1 },
+          { emoji: "👧",  id: 2 },
+        ]
+      },
+      {
+        display: "הַפֶּרַח יָפֶה",
+        speech:  "הַפֶּרַח יָפֶה",
+        correctEmoji: "🌸",
+        options: [
+          { emoji: "🌸",  id: 0 },
+          { emoji: "🌳",  id: 1 },
+          { emoji: "🐦",  id: 2 },
+        ]
+      },
+      {
+        display: "הַכַּדּוּר עָגֹל",
+        speech:  "הַכַּדּוּר עָגֹל",
+        correctEmoji: "⚽",
+        options: [
+          { emoji: "🏠",  id: 0 },
+          { emoji: "⚽",  id: 1 },
+          { emoji: "🎂",  id: 2 },
+        ]
+      },
+    ]
+  }
+];
+
+const CHEER = [
+  "כּל הַכָּבוֹד! 🌟",
+  "מְצוּיֶּנֶת! ✨",
+  "נִפְלָא! 🎉",
+  "יֶלְדָּה זָהָב! 👑",
+  "אַת אַלּוּפָה! 🏆",
+  "מַמָּשׁ יָפֶה! 💜",
+  "בְּרָבוֹ! 🎊",
+];
+const TRY_AGAIN = [
+  "נַסִּי שׁוּב! 💪",
+  "אַתְּ יְכוֹלָה! 🌸",
+  "עוֹד פַּעַם... 🤗",
+];
+const LEVEL_MSGS = [
+  "עברת לשלב 2 - מילים ארוכות! 🌟",
+  "עברת לשלב 3 - משפטים! 🚀",
+];
+
+// ─────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────
+let level = 0;
+let itemIdx = 0;
+let shuffledItems = [];
+let canAnswer = true;
+let audioCtx = null;
+let mapPosition = 0;    // 0=start, 1=after L1, 2=after L2, 3=at prize
+let starsCollected = 0;
+
+// Node positions in the 4-column grid (centers as % of container width)
+const NODE_LEFTS = ['12.5%', '37.5%', '62.5%', '87.5%'];
+
+// ─────────────────────────────────────────
+//  SCREEN HELPERS
+// ─────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─────────────────────────────────────────
+//  GAME FLOW
+// ─────────────────────────────────────────
+function startGame() {
+  level = 0; itemIdx = 0;
+  mapPosition = 0; starsCollected = 0;
+  resetMapUI();
+  showScreen('screenGame');
+  loadLevel();
+}
+
+function loadLevel() {
+  const lv = LEVELS[level];
+  document.getElementById('levelBadge').textContent = lv.name;
+  // shuffle a copy of items
+  shuffledItems = [...lv.items].sort(() => Math.random() - 0.5);
+  itemIdx = 0;
+  setMode(lv.type);
+  loadItem();
+}
+
+function setMode(type) {
+  document.getElementById('wordMode').style.display     = type === 'word'     ? 'contents' : 'none';
+  document.getElementById('sentenceMode').style.display = type === 'sentence' ? 'contents' : 'none';
+}
+
+function loadItem() {
+  const lv   = LEVELS[level];
+  const item = shuffledItems[itemIdx];
+  const pct  = (itemIdx / shuffledItems.length) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  canAnswer = true;
+
+  if (lv.type === 'word') {
+    loadWordItem(item, shuffledItems);
+  } else {
+    loadSentenceItem(item);
+  }
+}
+
+// ── WORD ITEM ──
+function loadWordItem(item, pool) {
+  document.getElementById('wordEmoji').textContent = item.emoji;
+  document.getElementById('wordFeedback').textContent = '';
+  document.getElementById('wordFeedback').className = 'feedback';
+
+  // 2 wrong options from pool, then shuffle
+  const wrongs = pool.filter(i => i.display !== item.display)
+                     .sort(() => Math.random() - 0.5)
+                     .slice(0, 2);
+  const opts = [item, ...wrongs].sort(() => Math.random() - 0.5);
+
+  const container = document.getElementById('wordOptions');
+  container.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'btn word-btn';
+    btn.textContent = opt.display;
+    btn.onclick = () => checkWord(btn, opt.display === item.display);
+    container.appendChild(btn);
+  });
+}
+
+function checkWord(btn, correct) {
+  if (!canAnswer) return;
+  canAnswer = false;
+  const fb = document.getElementById('wordFeedback');
+  if (correct) {
+    btn.classList.add('correct');
+    fb.className = 'feedback';
+    fb.textContent = CHEER[Math.floor(Math.random() * CHEER.length)];
+    burstStars();
+    playGood();
+    setTimeout(advance, 1400);
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback wrong-msg';
+    fb.textContent = TRY_AGAIN[Math.floor(Math.random() * TRY_AGAIN.length)];
+    playBad();
+    setTimeout(() => { btn.classList.remove('wrong'); canAnswer = true; fb.textContent = ''; }, 900);
+  }
+}
+
+// ── SENTENCE ITEM ──
+function loadSentenceItem(item) {
+  document.getElementById('sentenceText').textContent = item.display;
+  document.getElementById('sentenceFeedback').textContent = '';
+  document.getElementById('sentenceFeedback').className = 'feedback';
+
+  const opts = [...item.options].sort(() => Math.random() - 0.5);
+  const container = document.getElementById('emojiOptions');
+  container.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'btn emoji-btn';
+    btn.textContent = opt.emoji;
+    btn.onclick = () => checkSentence(btn, opt.emoji === item.correctEmoji);
+    container.appendChild(btn);
+  });
+}
+
+function checkSentence(btn, correct) {
+  if (!canAnswer) return;
+  canAnswer = false;
+  const fb = document.getElementById('sentenceFeedback');
+  if (correct) {
+    btn.classList.add('correct');
+    fb.className = 'feedback';
+    fb.textContent = CHEER[Math.floor(Math.random() * CHEER.length)];
+    burstStars();
+    playGood();
+    setTimeout(advance, 1400);
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback wrong-msg';
+    fb.textContent = TRY_AGAIN[Math.floor(Math.random() * TRY_AGAIN.length)];
+    playBad();
+    setTimeout(() => { btn.classList.remove('wrong'); canAnswer = true; fb.textContent = ''; }, 900);
+  }
+}
+
+function advance() {
+  itemIdx++;
+  if (itemIdx >= shuffledItems.length) {
+    showLevelComplete();
+  } else {
+    loadItem();
+  }
+}
+
+function showLevelComplete() {
+  starsCollected++;
+  mapPosition = level + 1;
+
+  updateMapNodes();
+  document.getElementById('starsBar').textContent = '⭐'.repeat(starsCollected);
+  document.getElementById('mapMsg').textContent = '';
+  document.getElementById('mapContinueBtn').style.display = 'none';
+  document.getElementById('mapPrizeBtn').style.display = 'none';
+
+  showScreen('screenMap');
+
+  // animate character sliding to new node
+  setTimeout(() => {
+    document.getElementById('jchar').style.left = NODE_LEFTS[mapPosition];
+    burstStars();
+    playLevelSound();
+  }, 300);
+
+  const messages = [
+    'כּוֹכָב רִאשׁוֹן נֶאֱסַף! עוֹד שְׁנַיִם לַפְּרָס! 🌟',
+    'שְׁנֵי כּוֹכָבִים! עוֹד אֶחָד! ✨',
+    'שְׁלֹשָׁה כּוֹכָבִים! הַפְּרָס מְחַכֶּה לָךְ! 🎁',
+  ];
+
+  setTimeout(() => {
+    document.getElementById('mapMsg').textContent = messages[level];
+    const isLast = level >= LEVELS.length - 1;
+    if (isLast) {
+      document.getElementById('mapPrizeBtn').style.display = 'inline-block';
+    } else {
+      document.getElementById('mapContinueBtn').style.display = 'inline-block';
+    }
+  }, 1400);
+}
+
+function updateMapNodes() {
+  const nodeIds   = ['jn0', 'jn1', 'jn2', 'jn3'];
+  const doneTexts = ['🏠', '⭐', '⭐', '👑'];
+  for (let i = 1; i <= mapPosition; i++) {
+    const node = document.getElementById(nodeIds[i]);
+    if (i < 3) {
+      node.className   = 'jnode done';
+      node.textContent = doneTexts[i];
+    } else {
+      node.className   = 'jnode prize-open';
+      node.textContent = '👑';
+    }
+  }
+}
+
+function resetMapUI() {
+  ['jn1', 'jn2'].forEach(id => {
+    const n = document.getElementById(id);
+    n.className   = 'jnode';
+    n.textContent = '?';
+  });
+  const prize = document.getElementById('jn3');
+  prize.className   = 'jnode prize-lock';
+  prize.textContent = '🎁';
+  document.getElementById('jchar').style.left = NODE_LEFTS[0];
+  document.getElementById('starsBar').textContent = '';
+  document.getElementById('mapMsg').textContent = '';
+  document.getElementById('mapContinueBtn').style.display = 'none';
+  document.getElementById('mapPrizeBtn').style.display = 'none';
+}
+
+function continueJourney() {
+  nextLevel();
+}
+
+function openPrize() {
+  burstStars(); burstStars();
+  playFanfare();
+  setTimeout(() => showScreen('screenGameDone'), 500);
+}
+
+function nextLevel() {
+  level++;
+  showScreen('screenGame');
+  loadLevel();
+}
+
+// ─────────────────────────────────────────
+//  SPEECH
+// ─────────────────────────────────────────
+let hebrewVoice = null;
+
+function loadHebrewVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  // Prefer female Israeli voices, then any he-IL voice
+  const ranked = voices.filter(v => /^he/i.test(v.lang));
+  hebrewVoice = ranked.find(v => /carmit|female|iphone/i.test(v.name))
+             || ranked.find(v => v.localService)
+             || ranked[0]
+             || null;
+}
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = loadHebrewVoice;
+  loadHebrewVoice();
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang  = 'he-IL';
+  u.rate  = 0.6;
+  u.pitch = 1.05;
+  if (hebrewVoice) u.voice = hebrewVoice;
+  window.speechSynthesis.speak(u);
+}
+
+function hearWord() {
+  const item = shuffledItems[itemIdx];
+  if (item) speak(item.speech);
+}
+
+function hearSentence() {
+  const item = shuffledItems[itemIdx];
+  if (item) speak(item.speech);
+}
+
+// ─────────────────────────────────────────
+//  AUDIO EFFECTS  (Web Audio API)
+// ─────────────────────────────────────────
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playLevelSound() {
+  try {
+    const ctx = getAudio();
+    [523, 784, 1047].forEach((hz, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = hz; osc.type = 'sine';
+        gain.gain.setValueAtTime(0.28, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.55);
+      }, i * 160);
+    });
+  } catch(e) {}
+}
+
+function playFanfare() {
+  try {
+    const ctx = getAudio();
+    [523, 659, 784, 659, 1047, 1047].forEach((hz, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = hz; osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+      }, i * 130);
+    });
+  } catch(e) {}
+}
+
+function playGood() {
+  try {
+    const ctx = getAudio();
+    // Rising happy arpeggio
+    [523, 659, 784, 1047].forEach((hz, i) => {
+      setTimeout(() => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = hz;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.28, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.38);
+      }, i * 90);
+    });
+  } catch(e) {}
+}
+
+function playBad() {
+  try {
+    const ctx = getAudio();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 220;
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────
+//  FLOATING STARS CANVAS
+// ─────────────────────────────────────────
+const canvas = document.getElementById('starCanvas');
+const ctx2d  = canvas.getContext('2d');
+let particles = [];
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function burstStars() {
+  const STAR_CHARS = ['⭐','🌟','✨','💜','🌸','💫','🎊'];
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight * 0.5;
+  for (let i = 0; i < 14; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2.5 + Math.random() * 3.5;
+    particles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      alpha: 1,
+      char: STAR_CHARS[Math.floor(Math.random() * STAR_CHARS.length)],
+      size: 22 + Math.random() * 18,
+    });
+  }
+}
+
+function animateStars() {
+  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.alpha > 0.02);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.12;  // gravity
+    p.alpha -= 0.018;
+    ctx2d.save();
+    ctx2d.globalAlpha = Math.max(0, p.alpha);
+    ctx2d.font = `${p.size}px serif`;
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText(p.char, p.x, p.y);
+    ctx2d.restore();
+  });
+  requestAnimationFrame(animateStars);
+}
+animateStars();
+</script>
+</body>
+</html>
