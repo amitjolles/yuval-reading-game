@@ -233,6 +233,9 @@
       100% { transform: scale(1) rotate(0deg); }
     }
 
+    /* ── MINI CELEBRATION ── */
+    .mini-emoji { font-size: clamp(3.5rem, 14vw, 5.5rem); animation: celebrate 0.7s ease; }
+
     /* ── JOURNEY MAP ── */
     .map-title {
       font-size: clamp(1.3rem, 5vw, 1.8rem);
@@ -416,6 +419,16 @@
   </div>
 </div>
 
+<!-- ════════════ MINI CELEBRATION (within-section) ════════════ -->
+<div class="screen" id="screenMini">
+  <div class="card" style="text-align:center">
+    <div id="miniEmoji" class="mini-emoji"></div>
+    <h1 style="color:#d63090;">כּל הַכָּבוֹד!</h1>
+    <p class="map-msg" id="miniMsg"></p>
+    <div class="deco">🌸⭐🌸</div>
+  </div>
+</div>
+
 <!-- ════════════ JOURNEY MAP ════════════ -->
 <div class="screen" id="screenMap">
   <div class="card">
@@ -444,7 +457,7 @@
     <p class="puzzle-intro">סַדְּרִי אֶת הַחֲלָקִים כְּדֵי לְגַלּוֹת אֶת הַתְּמוּנָה! 🌈</p>
     <div class="puzzle-grid" id="puzzleGrid"></div>
     <p class="map-msg" id="puzzleMsg"></p>
-    <button class="btn btn-start" id="puzzleDoneBtn" style="display:none" onclick="showFinalCelebration()">אַלּוּפָה! 🎉</button>
+    <button class="btn btn-start" id="puzzleDoneBtn" style="display:none" onclick="startGame()">שְׂחָקִי שׁוּב! 🔄</button>
   </div>
 </div>
 
@@ -467,11 +480,8 @@
 // ─────────────────────────────────────────
 //  GAME DATA
 // ─────────────────────────────────────────
-const LEVELS = [
-  {
-    name: "שלב 1 - מילים קצרות",
-    type: "word",
-    items: [
+// ── Shared item pools (random subsets drawn each level) ──
+const L1_ITEMS = [
       { display: "דָּג",    speech: "דָּג",    emoji: "🐟" },
       { display: "יָם",    speech: "יָם",    emoji: "🌊" },
       { display: "לֵב",    speech: "לֵב",    emoji: "❤️" },
@@ -492,12 +502,9 @@ const LEVELS = [
       { display: "לַיְלָה", speech: "לַיְלָה", emoji: "🌙" },
       { display: "אוֹר",   speech: "אוֹר",   emoji: "💡" },
       { display: "יֶלֶד",  speech: "יֶלֶד",  emoji: "👦" },
-    ]
-  },
-  {
-    name: "שלב 2 - מילים ארוכות",
-    type: "word",
-    items: [
+];
+
+const L2_ITEMS = [
       { display: "פַּרְפַּר",  speech: "פַּרְפַּר",  emoji: "🦋" },
       { display: "תַּפּוּחַ",  speech: "תַּפּוּחַ",  emoji: "🍎" },
       { display: "צִפּוֹר",   speech: "צִפּוֹר",   emoji: "🐦" },
@@ -518,12 +525,9 @@ const LEVELS = [
       { display: "גָּמָל",   speech: "גָּמָל",   emoji: "🐪" },
       { display: "תּוּכִּי",  speech: "תּוּכִּי",  emoji: "🦜" },
       { display: "כּוֹכָב",  speech: "כּוֹכָב",  emoji: "⭐" },
-    ]
-  },
-  {
-    name: "שלב 3 - משפטים",
-    type: "sentence",
-    items: [
+];
+
+const L3_ITEMS = [
       {
         display: "הַכֶּלֶב שָׂמֵחַ",
         speech:  "הַכֶּלֶב שָׂמֵחַ",
@@ -634,8 +638,20 @@ const LEVELS = [
         correctEmoji: "💡",
         options: [ { emoji: "🌙", id: 0 }, { emoji: "🌧️", id: 1 }, { emoji: "💡", id: 2 } ]
       },
-    ]
-  }
+];
+
+// 9 levels: 3 easy-word → 3 hard-word → 3 sentence
+// Each level picks a fresh random subset from the shared pool
+const LEVELS = [
+  { name: "שלב 1 - מילים קצרות",  type: "word",     items: L1_ITEMS },
+  { name: "שלב 2 - מילים קצרות",  type: "word",     items: L1_ITEMS },
+  { name: "שלב 3 - מילים קצרות",  type: "word",     items: L1_ITEMS },
+  { name: "שלב 4 - מילים ארוכות", type: "word",     items: L2_ITEMS },
+  { name: "שלב 5 - מילים ארוכות", type: "word",     items: L2_ITEMS },
+  { name: "שלב 6 - מילים ארוכות", type: "word",     items: L2_ITEMS },
+  { name: "שלב 7 - משפטים",       type: "sentence", items: L3_ITEMS },
+  { name: "שלב 8 - משפטים",       type: "sentence", items: L3_ITEMS },
+  { name: "שלב 9 - משפטים",       type: "sentence", items: L3_ITEMS },
 ];
 
 const CHEER = [
@@ -757,15 +773,8 @@ function checkPuzzleSolved() {
   burstStars(); playFanfare();
   setTimeout(() => burstStars(), 350);
   setTimeout(() => burstStars(), 700);
-  setTimeout(() => { document.getElementById('puzzleDoneBtn').style.display = 'inline-block'; }, 900);
-  setTimeout(showFinalCelebration, 2800);
-}
-
-function showFinalCelebration() {
-  showScreen('screenGameDone');
-  burstStars(); playFanfare();
-  setTimeout(() => burstStars(), 300);
-  setTimeout(() => burstStars(), 650);
+  // Show the restart button — clicking it calls startGame() with fresh random words
+  setTimeout(() => { document.getElementById('puzzleDoneBtn').style.display = 'inline-block'; }, 1000);
 }
 
 // ─────────────────────────────────────────
@@ -914,9 +923,31 @@ function advance() {
   }
 }
 
+const MINI_EMOJIS = ['🌟','✨','🎉','🌸','💜','🏆','🌈','⭐','🦋','🎊'];
+
 function showLevelComplete() {
+  const sectionIdx   = Math.floor(level / 3); // 0, 1, 2
+  const levelInSect  = level % 3;             // 0, 1, 2
+  const isSectionEnd = levelInSect === 2;
+  const isGameEnd    = level >= LEVELS.length - 1;
+
+  if (!isSectionEnd) {
+    // ── Within section: quick celebration, auto-advance ──
+    document.getElementById('miniEmoji').textContent =
+      MINI_EMOJIS[Math.floor(Math.random() * MINI_EMOJIS.length)];
+    document.getElementById('miniMsg').textContent =
+      levelInSect === 0 ? 'מַמָּשׁ יָפֶה! עוֹד שְׁנַיִם! 💪'
+                        : 'מְצוּיֶּנֶת! עוֹד שָׁלָב אֶחָד! 🌟';
+    showScreen('screenMini');
+    burstStars();
+    playGood();
+    setTimeout(() => nextLevel(), 2000);
+    return;
+  }
+
+  // ── Section complete: full map animation ──
   starsCollected++;
-  mapPosition = level + 1;
+  mapPosition = sectionIdx + 1;
 
   updateMapNodes();
   document.getElementById('starsBar').textContent = '⭐'.repeat(starsCollected);
@@ -925,8 +956,6 @@ function showLevelComplete() {
   document.getElementById('mapPrizeBtn').style.display = 'none';
 
   showScreen('screenMap');
-
-  // animate character sliding to new node
   setTimeout(() => {
     document.getElementById('jchar').style.left = NODE_LEFTS[mapPosition];
     burstStars();
@@ -934,15 +963,13 @@ function showLevelComplete() {
   }, 300);
 
   const messages = [
-    'כּוֹכָב רִאשׁוֹן נֶאֱסַף! עוֹד שְׁנַיִם לַפְּרָס! 🌟',
-    'שְׁנֵי כּוֹכָבִים! עוֹד אֶחָד! ✨',
+    'סיימת מילים קצרות! ⭐ עוֹד שְׁנַיִם לַפְּרָס!',
+    'סיימת מילים ארוכות! ⭐⭐ עוֹד חֵלֶק אֶחָד!',
     'שְׁלֹשָׁה כּוֹכָבִים! הַפְּרָס מְחַכֶּה לָךְ! 🎁',
   ];
-
   setTimeout(() => {
-    document.getElementById('mapMsg').textContent = messages[level];
-    const isLast = level >= LEVELS.length - 1;
-    if (isLast) {
+    document.getElementById('mapMsg').textContent = messages[sectionIdx];
+    if (isGameEnd) {
       document.getElementById('mapPrizeBtn').style.display = 'inline-block';
     } else {
       document.getElementById('mapContinueBtn').style.display = 'inline-block';
