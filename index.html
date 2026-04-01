@@ -236,6 +236,16 @@
     /* ── MINI CELEBRATION ── */
     .mini-emoji { font-size: clamp(3.5rem, 14vw, 5.5rem); animation: celebrate 0.7s ease; }
 
+    /* ── GO-BACK PENALTY ── */
+    @keyframes stepBack {
+      0%   { transform: translateX(0);    opacity: 1; }
+      35%  { transform: translateX(28px); opacity: 0.5; }
+      65%  { transform: translateX(-28px); opacity: 0.5; }
+      100% { transform: translateX(0);    opacity: 1; }
+    }
+    .card.stepping-back { animation: stepBack 0.55s ease; }
+    .progress-bar.going-back { background: linear-gradient(90deg, #e84393, #d63031) !important; }
+
     /* ── JOURNEY MAP ── */
     .map-title {
       font-size: clamp(1.3rem, 5vw, 1.8rem);
@@ -640,18 +650,15 @@ const L3_ITEMS = [
       },
 ];
 
-// 9 levels: 3 easy-word → 3 hard-word → 3 sentence
-// Each level picks a fresh random subset from the shared pool
+// 6 levels: 2 easy-word → 2 hard-word → 2 sentence  (2 per section)
+// Each level draws a fresh random subset from the shared pool
 const LEVELS = [
   { name: "שלב 1 - מילים קצרות",  type: "word",     items: L1_ITEMS },
   { name: "שלב 2 - מילים קצרות",  type: "word",     items: L1_ITEMS },
-  { name: "שלב 3 - מילים קצרות",  type: "word",     items: L1_ITEMS },
+  { name: "שלב 3 - מילים ארוכות", type: "word",     items: L2_ITEMS },
   { name: "שלב 4 - מילים ארוכות", type: "word",     items: L2_ITEMS },
-  { name: "שלב 5 - מילים ארוכות", type: "word",     items: L2_ITEMS },
-  { name: "שלב 6 - מילים ארוכות", type: "word",     items: L2_ITEMS },
-  { name: "שלב 7 - משפטים",       type: "sentence", items: L3_ITEMS },
-  { name: "שלב 8 - משפטים",       type: "sentence", items: L3_ITEMS },
-  { name: "שלב 9 - משפטים",       type: "sentence", items: L3_ITEMS },
+  { name: "שלב 5 - משפטים",       type: "sentence", items: L3_ITEMS },
+  { name: "שלב 6 - משפטים",       type: "sentence", items: L3_ITEMS },
 ];
 
 const CHEER = [
@@ -698,7 +705,7 @@ const PUZZLES = [
 
   { name:'גַּן פְּרָחִים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="100" fill="#BBDEFB"/><rect y="95" width="300" height="65" fill="#66BB6A"/><ellipse cx="150" cy="95" rx="165" ry="22" fill="#81C784"/><circle cx="255" cy="28" r="22" fill="#FDD835"/><rect x="37" y="65" width="5" height="38" fill="#5D4037"/><circle cx="40" cy="60" r="13" fill="#EF5350"/><circle cx="40" cy="60" r="6" fill="#FDD835"/><rect x="72" y="72" width="4" height="30" fill="#5D4037"/><circle cx="74" cy="68" r="10" fill="#AB47BC"/><circle cx="74" cy="68" r="5" fill="#FDD835"/><rect x="143" y="52" width="5" height="50" fill="#5D4037"/><circle cx="146" cy="48" r="15" fill="#FF7043"/><circle cx="146" cy="48" r="7" fill="#FDD835"/><rect x="215" y="62" width="5" height="42" fill="#5D4037"/><circle cx="218" cy="57" r="13" fill="#26C6DA"/><circle cx="218" cy="57" r="6" fill="#FDD835"/><rect x="260" y="70" width="4" height="33" fill="#5D4037"/><circle cx="262" cy="66" r="11" fill="#EC407A"/><circle cx="262" cy="66" r="5" fill="#FDD835"/><ellipse cx="105" cy="52" rx="13" ry="7" fill="#CE93D8" transform="rotate(-25 105 52)"/><ellipse cx="120" cy="52" rx="13" ry="7" fill="#BA68C8" transform="rotate(25 120 52)"/><rect x="112" y="46" width="2" height="12" fill="#5D4037"/></svg>` },
 
-  { name:'חָלָל', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#0D1B4B"/><circle cx="55" cy="55" r="30" fill="#ECEFF1"/><circle cx="72" cy="44" r="21" fill="#0D1B4B"/><ellipse cx="200" cy="80" rx="38" ry="38" fill="#7E57C2"/><ellipse cx="200" cy="80" rx="60" ry="14" fill="#B39DDB" opacity="0.7"/><ellipse cx="200" cy="80" rx="38" ry="38" fill="none" stroke="#9575CD" stroke-width="2"/><circle cx="26" cy="18" r="2" fill="white"/><circle cx="80" cy="8" r="1.5" fill="white"/><circle cx="130" cy="25" r="2.5" fill="white"/><circle cx="170" cy="12" r="2" fill="white"/><circle cx="245" cy="20" r="3" fill="white"/><circle cx="285" cy="35" r="2" fill="white"/><circle cx="265" cy="8" r="1.5" fill="white"/><circle cx="15" cy="45" r="1.5" fill="white"/><circle cx="100" cy="140" r="2" fill="white"/><circle cx="40" cy="120" r="1.5" fill="white"/><circle cx="270" cy="130" r="2" fill="white"/><circle cx="155" cy="145" r="1.5" fill="white"/><circle cx="130" cy="55" r="6" fill="#FF8A65"/><circle cx="130" cy="55" r="3" fill="#FF5722"/><path d="M115,55 L125,55 M135,55 L145,55 M130,40 L130,50 M130,60 L130,70" stroke="#FF8A65" stroke-width="1.5"/><circle cx="20" cy="130" r="8" fill="#4FC3F7"/><circle cx="36" cy="130" r="8" fill="#4FC3F7"/><circle cx="28" cy="122" r="8" fill="#4FC3F7"/></svg>` },
+  { name:'חָלָל', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#0A0A2E"/><circle cx="58" cy="65" r="42" fill="#FFFDE7"/><circle cx="76" cy="50" r="30" fill="#0A0A2E"/><ellipse cx="215" cy="90" rx="40" ry="40" fill="#9C27B0"/><ellipse cx="215" cy="90" rx="73" ry="17" fill="#F9A825" opacity="0.85"/><ellipse cx="215" cy="90" rx="73" ry="17" fill="none" stroke="#FF8F00" stroke-width="4" opacity="0.5"/><ellipse cx="215" cy="82" rx="28" ry="8" fill="#BA68C8" opacity="0.55"/><rect x="129" y="6" width="18" height="36" rx="4" fill="#F44336"/><polygon points="129,6 147,6 138,0" fill="#FFC107"/><rect x="121" y="32" width="10" height="13" rx="2" fill="#FF7043"/><rect x="145" y="32" width="10" height="13" rx="2" fill="#FF7043"/><circle cx="138" cy="20" r="5" fill="#80D8FF"/><ellipse cx="138" cy="50" rx="7" ry="10" fill="#FF6D00" opacity="0.9"/><ellipse cx="138" cy="56" rx="4" ry="7" fill="#FFEB3B"/><polygon points="22,20 24,13 26,20 33,20 28,24 30,31 24,27 18,31 20,24 15,20" fill="#FFD700"/><polygon points="275,28 277,21 279,28 286,28 281,32 283,39 277,35 271,39 273,32 268,28" fill="#FFF176"/><polygon points="153,138 155,131 157,138 164,138 159,142 161,149 155,145 149,149 151,142 146,138" fill="#FFD700"/><circle cx="30" cy="50" r="3" fill="white"/><circle cx="98" cy="10" r="3" fill="white"/><circle cx="168" cy="16" r="3" fill="#FFF9C4"/><circle cx="250" cy="12" r="2.5" fill="white"/><circle cx="288" cy="58" r="2.5" fill="white"/><circle cx="18" cy="118" r="2.5" fill="#FFF9C4"/><circle cx="92" cy="148" r="2" fill="white"/><circle cx="178" cy="155" r="2.5" fill="white"/><line x1="85" y1="6" x2="118" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/><circle cx="85" cy="6" r="3.5" fill="white"/></svg>` },
 
   { name:'גַּלִּים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="75" fill="#87CEEB"/><circle cx="240" cy="32" r="26" fill="#FFD600"/><ellipse cx="80" cy="20" rx="26" ry="12" fill="white" opacity="0.9"/><ellipse cx="60" cy="26" rx="18" ry="10" fill="white" opacity="0.9"/><rect y="75" width="300" height="85" fill="#0288D1"/><path d="M0,90 Q50,75 100,90 Q150,105 200,90 Q250,75 300,90 L300,160 L0,160Z" fill="#0277BD"/><path d="M0,110 Q60,95 120,110 Q180,125 240,110 Q270,103 300,110 L300,160 L0,160Z" fill="#01579B"/><ellipse cx="80" cy="100" rx="18" ry="8" fill="#FFD600" opacity="0.6"/><path d="M55,88 Q65,82 70,88 L72,92 Q62,96 57,90Z" fill="#FF7043"/><path d="M55,89 L73,92 L70,97 L52,94Z" fill="#FFA726"/><path d="M180,95 Q190,89 195,95 L197,99 Q187,103 182,97Z" fill="#EC407A"/><path d="M180,96 L198,99 L195,104 L177,101Z" fill="#F48FB1"/><path d="M240,85 Q250,79 255,85 L257,89 Q247,93 242,87Z" fill="#FF7043"/><circle cx="35" cy="140" r="7" fill="#FF8A65"/><circle cx="35" cy="140" r="4" fill="#FF5722"/><circle cx="270" cy="145" r="6" fill="#FF8A65"/><circle cx="270" cy="145" r="3" fill="#FF5722"/></svg>` },
 
@@ -710,9 +717,9 @@ const PUZZLES = [
 
   { name:'יוֹם שֶׁלֶג', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="110" fill="#B3E5FC"/><rect y="110" width="300" height="50" fill="#E3F2FD"/><ellipse cx="150" cy="108" rx="170" ry="25" fill="#ECEFF1"/><path d="M30,110 L50,60 L70,110Z" fill="#388E3C"/><path d="M20,110 L50,45 L80,110Z" fill="#2E7D32"/><path d="M220,110 L245,55 L270,110Z" fill="#388E3C"/><path d="M210,110 L245,40 L280,110Z" fill="#2E7D32"/><circle cx="150" cy="128" r="18" fill="white" stroke="#90A4AE" stroke-width="1.5"/><circle cx="150" cy="103" r="14" fill="white" stroke="#90A4AE" stroke-width="1.5"/><circle cx="150" cy="82" r="11" fill="white" stroke="#90A4AE" stroke-width="1.5"/><circle cx="150" cy="82" r="3" fill="#FF7043"/><line x1="135" y1="100" x2="128" y2="96" stroke="#FF7043" stroke-width="2"/><line x1="165" y1="100" x2="172" y2="96" stroke="#FF7043" stroke-width="2"/><circle cx="147" cy="79" r="2" fill="#37474F"/><circle cx="153" cy="79" r="2" fill="#37474F"/><circle cx="150" cy="84" r="1.5" fill="#37474F"/><circle cx="30" cy="30" r="3" fill="white" opacity="0.9"/><circle cx="80" cy="15" r="4" fill="white" opacity="0.9"/><circle cx="130" cy="35" r="3" fill="white" opacity="0.9"/><circle cx="200" cy="20" r="3.5" fill="white" opacity="0.9"/><circle cx="260" cy="30" r="3" fill="white" opacity="0.9"/><circle cx="55" cy="50" r="2.5" fill="white" opacity="0.9"/><circle cx="240" cy="55" r="2.5" fill="white" opacity="0.9"/></svg>` },
 
-  { name:'מִתַּחַת לַמַּיִם', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#006994"/><rect width="300" height="30" fill="#0288D1" opacity="0.7"/><path d="M0,25 Q75,10 150,25 Q225,40 300,25 L300,0 L0,0Z" fill="#29B6F6" opacity="0.5"/><ellipse cx="50" cy="130" rx="30" ry="18" fill="#2E7D32"/><ellipse cx="80" cy="120" rx="20" ry="28" fill="#388E3C" opacity="0.8"/><ellipse cx="240" cy="125" rx="28" ry="20" fill="#1B5E20"/><ellipse cx="270" cy="115" rx="18" ry="25" fill="#2E7D32" opacity="0.8"/><ellipse cx="150" cy="145" rx="35" ry="15" fill="#FF7043"/><ellipse cx="140" cy="138" rx="20" ry="10" fill="#FF8A65" opacity="0.7"/><path d="M100,70 Q115,62 120,70 L118,76 Q103,78 100,72Z" fill="#FF3333"/><path d="M100,71 L120,76 L117,82 L97,77Z" fill="#FF8800"/><circle cx="97" cy="68" r="3" fill="white"/><circle cx="97" cy="68" r="1.5" fill="#1A237E"/><path d="M180,50 Q198,42 205,50 L203,57 Q185,60 180,54Z" fill="#FFD600"/><path d="M180,51 L205,57 L202,64 L177,58Z" fill="#FF8800"/><circle cx="176" cy="47" r="3" fill="white"/><circle cx="176" cy="47" r="1.5" fill="#1A237E"/><circle cx="40" cy="50" r="5" fill="#E1F5FE" opacity="0.6"/><circle cx="160" cy="30" r="4" fill="#E1F5FE" opacity="0.6"/><circle cx="250" cy="60" r="5" fill="#E1F5FE" opacity="0.6"/><circle cx="130" cy="90" r="3" fill="#E1F5FE" opacity="0.6"/><circle cx="210" cy="100" r="4" fill="#E1F5FE" opacity="0.6"/></svg>` },
+  { name:'מִתַּחַת לַמַּיִם', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#0288D1"/><rect width="300" height="38" fill="#29B6F6" opacity="0.75"/><line x1="150" y1="0" x2="75" y2="85" stroke="#FFF9C4" stroke-width="8" opacity="0.18"/><line x1="150" y1="0" x2="150" y2="95" stroke="#FFF9C4" stroke-width="10" opacity="0.18"/><line x1="150" y1="0" x2="225" y2="85" stroke="#FFF9C4" stroke-width="8" opacity="0.18"/><ellipse cx="150" cy="83" rx="52" ry="30" fill="#FF6D00"/><ellipse cx="150" cy="77" rx="40" ry="22" fill="#FF8A65"/><polygon points="98,83 72,63 72,103" fill="#E64A19"/><circle cx="186" cy="73" r="10" fill="white"/><circle cx="189" cy="73" r="6" fill="#1A237E"/><circle cx="191" cy="71" r="2" fill="white"/><path d="M200,83 Q207,91 200,91" stroke="#BF360C" stroke-width="2.5" fill="none"/><line x1="145" y1="54" x2="145" y2="112" stroke="#BF360C" stroke-width="3" opacity="0.45"/><line x1="160" y1="54" x2="160" y2="112" stroke="#BF360C" stroke-width="3" opacity="0.45"/><rect x="22" y="132" width="9" height="28" fill="#F44336"/><circle cx="26" cy="130" r="13" fill="#FF1744"/><circle cx="16" cy="138" r="10" fill="#FF5252"/><circle cx="36" cy="138" r="10" fill="#FF5252"/><path d="M58,160 Q47,138 58,116 Q69,94 58,74" stroke="#43A047" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M75,160 Q86,138 75,116 Q64,94 75,74" stroke="#2E7D32" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="258" y="137" width="9" height="23" fill="#CE93D8"/><circle cx="262" cy="135" r="12" fill="#AB47BC"/><circle cx="252" cy="143" r="9" fill="#CE93D8"/><circle cx="272" cy="143" r="9" fill="#BA68C8"/><polygon points="238,118 241,108 244,118 254,115 247,122 250,132 242,127 234,132 237,122 230,115" fill="#FF8A65"/><ellipse cx="262" cy="46" rx="24" ry="14" fill="#FFD600"/><polygon points="238,46 220,35 220,57" fill="#FBC02D"/><circle cx="278" cy="40" r="6" fill="white"/><circle cx="281" cy="40" r="3.5" fill="#1A237E"/><circle cx="92" cy="28" r="8" fill="none" stroke="white" stroke-width="2.5" opacity="0.7"/><circle cx="202" cy="18" r="6" fill="none" stroke="white" stroke-width="2" opacity="0.7"/><circle cx="38" cy="58" r="6" fill="none" stroke="white" stroke-width="2" opacity="0.65"/><circle cx="282" cy="72" r="7" fill="none" stroke="white" stroke-width="2.5" opacity="0.7"/></svg>` },
 
-  { name:'לַיְלָה כּוֹכָבִים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#1A237E"/><rect width="300" height="160" fill="#283593" opacity="0.5"/><path d="M0,120 Q75,105 150,115 Q225,125 300,110 L300,160 L0,160Z" fill="#1B5E20"/><rect x="195" y="100" width="40" height="45" fill="#37474F"/><rect x="205" y="100" width="20" height="20" fill="#FFF176" opacity="0.8"/><path d="M188,100 L215,78 L242,100Z" fill="#455A64"/><circle cx="60" cy="35" r="22" fill="#FFF9C4"/><circle cx="78" cy="28" r="16" fill="#1A237E"/><circle cx="20" cy="15" r="3" fill="white"/><circle cx="45" cy="8" r="2.5" fill="white"/><circle cx="110" cy="12" r="3.5" fill="white"/><circle cx="155" cy="20" r="2" fill="white"/><circle cx="185" cy="10" r="3" fill="white"/><circle cx="230" cy="18" r="2.5" fill="white"/><circle cx="265" cy="8" r="3" fill="white"/><circle cx="285" cy="25" r="2" fill="white"/><circle cx="140" cy="45" r="2" fill="white"/><circle cx="175" cy="35" r="3" fill="white"/><circle cx="250" cy="42" r="2.5" fill="white"/><circle cx="290" cy="55" r="2" fill="white"/><circle cx="20" cy="60" r="2.5" fill="white"/><circle cx="130" cy="70" r="2" fill="white"/><path d="M155,15 L157,22 L164,22 L158,27 L160,34 L155,29 L150,34 L152,27 L146,22 L153,22Z" fill="#FFD700" opacity="0.9"/></svg>` },
+  { name:'לַיְלָה כּוֹכָבִים', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#1A237E"/><rect y="120" width="300" height="40" fill="#1B5E20"/><ellipse cx="150" cy="120" rx="170" ry="18" fill="#2E7D32"/><circle cx="68" cy="52" r="40" fill="#FFF176"/><circle cx="88" cy="38" r="30" fill="#1A237E"/><circle cx="52" cy="68" r="5" fill="#FFFDE7" opacity="0.35"/><circle cx="40" cy="50" r="4" fill="#FFFDE7" opacity="0.28"/><rect x="200" y="96" width="68" height="50" fill="#5D3A1A"/><rect x="210" y="102" width="20" height="20" fill="#FFF176" opacity="0.95"/><rect x="242" y="102" width="20" height="20" fill="#FFF176" opacity="0.95"/><rect x="225" y="118" width="20" height="28" fill="#8D6E63"/><polygon points="192,96 268,96 230,64" fill="#8B3A3A"/><rect x="250" y="68" width="12" height="24" fill="#795548"/><rect x="160" y="120" width="8" height="24" fill="#5D4037"/><circle cx="164" cy="112" r="16" fill="#2E7D32"/><rect x="285" y="123" width="7" height="18" fill="#5D4037"/><circle cx="288" cy="115" r="13" fill="#388E3C"/><polygon points="158,24 160,15 162,24 171,24 164,29 167,38 160,33 153,38 156,29 149,24" fill="#FFD700"/><polygon points="228,40 230,31 232,40 241,40 234,45 237,54 230,49 223,54 226,45 219,40" fill="#FFF176"/><polygon points="288,16 290,7 292,16 301,16 294,21 297,30 290,25 283,30 286,21 279,16" fill="#FFD700"/><circle cx="18" cy="20" r="3" fill="white"/><circle cx="112" cy="12" r="3" fill="white"/><circle cx="148" cy="32" r="3" fill="#FFF9C4"/><circle cx="188" cy="16" r="2.5" fill="white"/><circle cx="253" cy="62" r="2.5" fill="white"/><circle cx="297" cy="78" r="2" fill="white"/><circle cx="128" cy="58" r="2.5" fill="#FFF9C4"/><line x1="124" y1="6" x2="157" y2="30" stroke="#FFF9C4" stroke-width="3" stroke-linecap="round" opacity="0.9"/><circle cx="124" cy="6" r="3.5" fill="white"/><circle cx="187" cy="108" r="3.5" fill="#FFF176" opacity="0.85"/><circle cx="172" cy="116" r="2.5" fill="#FFF176" opacity="0.65"/></svg>` },
 
   { name:'שְׂדֵה חַמָּנִיּוֹת', svg:`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="90" fill="#87CEEB"/><rect y="90" width="300" height="70" fill="#558B2F"/><ellipse cx="150" cy="90" rx="170" ry="22" fill="#689F38"/><rect x="47" y="45" width="7" height="55" fill="#558B2F"/><circle cx="50" cy="40" r="20" fill="#FDD835"/><circle cx="50" cy="40" r="10" fill="#8D6E63"/><rect x="143" y="30" width="8" height="70" fill="#558B2F"/><circle cx="147" cy="24" r="24" fill="#FDD835"/><circle cx="147" cy="24" r="12" fill="#8D6E63"/><rect x="243" y="42" width="7" height="58" fill="#558B2F"/><circle cx="247" cy="36" r="20" fill="#FDD835"/><circle cx="247" cy="36" r="10" fill="#8D6E63"/><rect x="95" y="60" width="6" height="42" fill="#558B2F"/><circle cx="98" cy="55" r="16" fill="#FDD835"/><circle cx="98" cy="55" r="8" fill="#8D6E63"/><rect x="195" y="55" width="6" height="45" fill="#558B2F"/><circle cx="198" cy="49" r="17" fill="#FDD835"/><circle cx="198" cy="49" r="8" fill="#8D6E63"/><circle cx="240" cy="22" r="22" fill="#FFF176" opacity="0.9"/><path d="M15,72 Q20,65 25,72" stroke="#37474F" stroke-width="2" fill="none"/><path d="M270,60 Q275,53 280,60" stroke="#37474F" stroke-width="2" fill="none"/></svg>` },
 
@@ -864,16 +871,38 @@ function checkWord(btn, correct) {
     btn.classList.add('correct');
     fb.className = 'feedback';
     fb.textContent = CHEER[Math.floor(Math.random() * CHEER.length)];
-    burstStars();
-    playGood();
+    burstStars(); playGood();
     setTimeout(advance, 1400);
   } else {
     btn.classList.add('wrong');
     fb.className = 'feedback wrong-msg';
-    fb.textContent = TRY_AGAIN[Math.floor(Math.random() * TRY_AGAIN.length)];
     playBad();
-    setTimeout(() => { btn.classList.remove('wrong'); canAnswer = true; fb.textContent = ''; }, 900);
+    handleWrong(fb, btn);
   }
+}
+
+function handleWrong(fb, btn) {
+  if (itemIdx > 0) {
+    fb.textContent = 'חוֹזְרִים אָחוֹר... ⬅️';
+    setTimeout(() => goBack(fb), 1300);
+  } else {
+    fb.textContent = TRY_AGAIN[Math.floor(Math.random() * TRY_AGAIN.length)];
+    setTimeout(() => { btn && btn.classList.remove('wrong'); canAnswer = true; fb.textContent = ''; }, 900);
+  }
+}
+
+function goBack(fb) {
+  itemIdx--;
+  // Flash progress bar red then slide card back
+  const bar  = document.getElementById('progressBar');
+  const card = document.querySelector('#screenGame .card');
+  bar.classList.add('going-back');
+  card.classList.add('stepping-back');
+  setTimeout(() => {
+    bar.classList.remove('going-back');
+    card.classList.remove('stepping-back');
+  }, 560);
+  loadItem();
 }
 
 // ── SENTENCE ITEM ──
@@ -908,9 +937,8 @@ function checkSentence(btn, correct) {
   } else {
     btn.classList.add('wrong');
     fb.className = 'feedback wrong-msg';
-    fb.textContent = TRY_AGAIN[Math.floor(Math.random() * TRY_AGAIN.length)];
     playBad();
-    setTimeout(() => { btn.classList.remove('wrong'); canAnswer = true; fb.textContent = ''; }, 900);
+    handleWrong(fb, btn);
   }
 }
 
@@ -926,18 +954,16 @@ function advance() {
 const MINI_EMOJIS = ['🌟','✨','🎉','🌸','💜','🏆','🌈','⭐','🦋','🎊'];
 
 function showLevelComplete() {
-  const sectionIdx   = Math.floor(level / 3); // 0, 1, 2
-  const levelInSect  = level % 3;             // 0, 1, 2
-  const isSectionEnd = levelInSect === 2;
+  const sectionIdx   = Math.floor(level / 2); // 0, 1, 2
+  const levelInSect  = level % 2;             // 0, 1
+  const isSectionEnd = levelInSect === 1;
   const isGameEnd    = level >= LEVELS.length - 1;
 
   if (!isSectionEnd) {
     // ── Within section: quick celebration, auto-advance ──
     document.getElementById('miniEmoji').textContent =
       MINI_EMOJIS[Math.floor(Math.random() * MINI_EMOJIS.length)];
-    document.getElementById('miniMsg').textContent =
-      levelInSect === 0 ? 'מַמָּשׁ יָפֶה! עוֹד שְׁנַיִם! 💪'
-                        : 'מְצוּיֶּנֶת! עוֹד שָׁלָב אֶחָד! 🌟';
+    document.getElementById('miniMsg').textContent = 'מְצוּיֶּנֶת! עוֹד שָׁלָב אֶחָד! 🌟';
     showScreen('screenMini');
     burstStars();
     playGood();
